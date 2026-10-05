@@ -5,6 +5,38 @@ const MODEL = "claude-opus-5-5";
 const MAX_MESSAGES = 40;
 const MAX_MESSAGE_CHARS = 8000;
 const MAX_BOOK_CHARS = 400_000;
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+const RATE_LIMIT_MAX_REQUESTS = 20;
+
+const requestLog = new Map<string, number[]>();
+
+function rateLimited(key: string) {
+  const now = Date.now();
+  const recent = (requestLog.get(key) ?? []).filter(
+    (time) => now - time < RATE_LIMIT_WINDOW_MS,
+  );
+  if (recent.length >= RATE_LIMIT_MAX_REQUESTS) {
+    requestLog.set(key, recent);
+    return true;
+  }
+  recent.push(now);
+  requestLog.set(key, recent);
+  if (requestLog.size > 1000) {
+    for (const [entry, times] of requestLog) {
+      if (times.every((time) => now - time >= RATE_LIMIT_WINDOW_MS)) {
+        requestLog.delete(entry);
+      }
+    }
+  }
+  return false;
+}
+
+function assistantEnabled() {
+  return (
+    process.env.NODE_ENV !== "production" ||
+    process.env.ASSISTANT_ENABLED === "true"
+  );
+}
 
 const INSTRUCTIONS = `You are the book assistant inside ${SITE_NAME}, a CRM used by a registered investment advisor (RIA) firm. You help advisors and client service associates understand and act on their book of business.
 
@@ -73,13 +105,35 @@ function errorResponse(error: unknown) {
 }
 
 export async function POST(request: Request) {
+  if (!assistantEnabled()) {
+    return jsonError(
+      503,
+      "disabled",
+      "The assistant is disabled in production. Set ASSISTANT_ENABLED=true only behind authentication.",
+    );
+  }
+
   const origin = request.headers.get("origin");
   const host = request.headers.get("host");
-  if (origin && host && new URL(origin).host !== host) {
+  let sameOrigin = false;
+  try {
+    sameOrigin = Boolean(origin && host && new URL(origin).host === host);
+  } catch {
+    sameOrigin = false;
+  }
+  if (!sameOrigin) {
+    return jsonError(403, "forbidden", "Requests must come from this app.");
+  }
+
+  const clientKey =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    "local";
+  if (rateLimited(clientKey)) {
     return jsonError(
-      403,
-      "forbidden",
-      "Cross-origin requests are not allowed.",
+      429,
+      "rate_limited",
+      "Too many assistant requests. Try again in a few minutes.",
     );
   }
 
