@@ -89,6 +89,16 @@ async function readLimitedBody(request: Request) {
 
 type AssistantProvider = "acp" | "api";
 
+const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]", "::1"]);
+
+function isLoopbackHost(host: string | null) {
+  if (!host) return false;
+  const name = host.startsWith("[")
+    ? host.slice(0, host.indexOf("]") + 1)
+    : host.split(":")[0];
+  return LOOPBACK_HOSTS.has(name.toLowerCase());
+}
+
 function assistantProvider(): AssistantProvider {
   const configured = process.env.ASSISTANT_PROVIDER?.trim().toLowerCase();
   if (configured === "acp" || configured === "api") return configured;
@@ -251,6 +261,13 @@ export async function POST(request: Request) {
   const provider = assistantProvider();
   let body: ReadableStream<Uint8Array>;
   if (provider === "acp") {
+    if (!isLoopbackHost(host)) {
+      return jsonError(
+        403,
+        "forbidden",
+        "The Claude subscription provider only answers requests to localhost.",
+      );
+    }
     if (process.env.NODE_ENV === "production") {
       return jsonError(
         503,
