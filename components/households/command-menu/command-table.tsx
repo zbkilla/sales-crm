@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import CalendarIcon from "@/public/assets/images/_common/calendar.svg";
 
 export const COMMAND_TABLE_GRID =
-  "grid grid-cols-[minmax(0,1fr)_96px] gap-x-4 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1.4fr)_minmax(0,1fr)_110px] lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1.4fr)_minmax(0,1fr)_110px_150px_minmax(0,1fr)]";
+  "grid grid-cols-[minmax(0,1fr)_104px] gap-x-4 md:grid-cols-[minmax(0,1fr)_216px_148px_104px] lg:grid-cols-[minmax(0,1fr)_216px_148px_104px_96px_84px] xl:grid-cols-[minmax(0,1fr)_216px_148px_104px_96px_84px_100px_112px]";
 
 const HEADERS = [
   { label: "Household", className: "" },
@@ -25,7 +25,9 @@ const HEADERS = [
   { label: "Advisor", className: "hidden md:block" },
   { label: "AUM / Assets", className: "text-right" },
   { label: "Next follow-up", className: "hidden lg:block" },
-  { label: "Last touchpoint", className: "hidden lg:block" },
+  { label: "Status", className: "hidden lg:block" },
+  { label: "Last touchpoint", className: "hidden xl:block" },
+  { label: "Type", className: "hidden xl:block" },
 ];
 
 export function CommandTableHeader() {
@@ -85,7 +87,7 @@ export function CommandHouseholdRow({
         <span className="truncate">{household.name}</span>
       </span>
 
-      <span className="hidden min-w-0 items-center gap-[3px] overflow-hidden md:flex">
+      <span className="hidden min-w-0 items-center gap-[3px] overflow-hidden whitespace-nowrap md:flex">
         <SegmentTags household={household} size="sm" />
       </span>
 
@@ -94,7 +96,7 @@ export function CommandHouseholdRow({
         <span className="truncate">{advisor.name}</span>
       </span>
 
-      <span className="flex items-center justify-end gap-1 tabular-nums">
+      <span className="flex items-center justify-end gap-1 whitespace-nowrap tabular-nums">
         {value > 0 ? (
           <>
             <span className="text-muted-foreground">$</span>
@@ -105,17 +107,26 @@ export function CommandHouseholdRow({
         )}
       </span>
 
-      <span className="hidden items-center gap-2 tabular-nums lg:flex">
+      <span className="hidden items-center whitespace-nowrap tabular-nums lg:flex">
         {due ? formatDate(due) : <span className="text-subtle">—</span>}
-        {status && <FollowUpTag status={status} />}
       </span>
 
-      <span className="text-soft hidden min-w-0 items-center gap-1 lg:flex">
+      <span className="hidden items-center lg:flex">
+        {status ? (
+          <FollowUpTag status={status} />
+        ) : (
+          <span className="text-subtle">—</span>
+        )}
+      </span>
+
+      <span className="text-soft hidden items-center gap-1 whitespace-nowrap xl:flex">
         <CalendarIcon aria-hidden className="size-3.5 shrink-0" />
-        <span className="shrink-0 tabular-nums">
+        <span className="tabular-nums">
           {formatDate(household.lastTouchpoint.date)}
         </span>
-        <span aria-hidden className="mx-[3px] h-2 w-px shrink-0 bg-white/15" />
+      </span>
+
+      <span className="text-soft hidden min-w-0 items-center xl:flex">
         <span className="truncate">{household.lastTouchpoint.label}</span>
       </span>
     </CommandItem>

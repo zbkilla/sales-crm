@@ -56,7 +56,7 @@ export default function CommandMenu() {
       onOpenChange={setOpen}
       title="Search"
       description="Search households by name, member, advisor, tier or tag"
-      className="max-w-[960px]"
+      className="max-w-[1240px]"
       onCloseAutoFocus={(event) => {
         if (actionRan.current) event.preventDefault();
         actionRan.current = false;
