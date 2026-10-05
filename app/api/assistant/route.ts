@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { AcpSetupError, streamViaAcp } from "@/lib/assistant/acp-provider";
 import { SITE_NAME } from "@/lib/seo";
 
 const MODEL = "claude-opus-5-5";
@@ -84,6 +85,26 @@ async function readLimitedBody(request: Request) {
     offset += chunk.byteLength;
   }
   return new TextDecoder().decode(body);
+}
+
+type AssistantProvider = "acp" | "api";
+
+function assistantProvider(): AssistantProvider {
+  const configured = process.env.ASSISTANT_PROVIDER?.trim().toLowerCase();
+  if (configured === "acp" || configured === "api") return configured;
+  return process.env.ANTHROPIC_API_KEY ? "api" : "acp";
+}
+
+function transcriptPrompt(messages: ChatMessage[]) {
+  if (messages.length === 1) return messages[0].content;
+  const history = messages
+    .slice(0, -1)
+    .map(
+      (message) =>
+        `${message.role === "user" ? "Advisor" : "Assistant"}: ${message.content}`,
+    )
+    .join("\n\n");
+  return `Conversation so far:\n\n${history}\n\nAdvisor's new message:\n${messages[messages.length - 1].content}`;
 }
 
 function assistantEnabled() {
@@ -227,6 +248,52 @@ export async function POST(request: Request) {
     );
   }
 
+  const provider = assistantProvider();
+  let body: ReadableStream<Uint8Array>;
+  if (provider === "acp") {
+    if (process.env.NODE_ENV === "production") {
+      return jsonError(
+        503,
+        "disabled",
+        "The Claude subscription provider is for local use only. Configure ANTHROPIC_API_KEY for deployed environments.",
+      );
+    }
+    try {
+      body = await streamViaAcp({
+        systemPrompt: `${INSTRUCTIONS}\n\n<book>\n${bookJson}\n</book>`,
+        prompt: transcriptPrompt(messages),
+        model: process.env.ASSISTANT_ACP_MODEL?.trim() || "opus",
+      });
+    } catch (error) {
+      if (error instanceof AcpSetupError) {
+        return jsonError(503, error.code, error.message);
+      }
+      console.error("Assistant ACP error", error);
+      return jsonError(
+        502,
+        "upstream_error",
+        "The assistant could not start. Try again.",
+      );
+    }
+  } else {
+    const result = await streamViaApi(bookJson, messages);
+    if (result instanceof Response) return result;
+    body = result;
+  }
+
+  return new Response(body, {
+    headers: {
+      "content-type": "text/plain; charset=utf-8",
+      "cache-control": "no-store",
+      "x-assistant-provider": provider,
+    },
+  });
+}
+
+async function streamViaApi(
+  bookJson: string,
+  messages: ChatMessage[],
+): Promise<ReadableStream<Uint8Array> | Response> {
   let stream: ReturnType<Anthropic["beta"]["messages"]["stream"]>;
   let iterator: AsyncIterator<Anthropic.Beta.Messages.BetaRawMessageStreamEvent>;
   let first: IteratorResult<Anthropic.Beta.Messages.BetaRawMessageStreamEvent>;
@@ -302,10 +369,5 @@ export async function POST(request: Request) {
     },
   });
 
-  return new Response(body, {
-    headers: {
-      "content-type": "text/plain; charset=utf-8",
-      "cache-control": "no-store",
-    },
-  });
+  return body;
 }

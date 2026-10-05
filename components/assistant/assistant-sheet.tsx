@@ -44,6 +44,7 @@ export default function AssistantSheet() {
   const draft = useHouseholdsStore((state) => state.assistantDraft);
   const setDraft = useHouseholdsStore((state) => state.setAssistantDraft);
   const [pending, setPending] = useState(false);
+  const [provider, setProvider] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -127,6 +128,7 @@ export default function AssistantSheet() {
         return;
       }
 
+      setProvider(response.headers.get("x-assistant-provider"));
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       for (;;) {
@@ -181,6 +183,13 @@ export default function AssistantSheet() {
           <div className="flex items-center gap-2">
             <MessageQuestionIcon aria-hidden className="text-icon size-3.5" />
             <SheetTitle>Book chat</SheetTitle>
+            {provider && (
+              <span className="caption-style text-subtle">
+                {provider === "acp"
+                  ? "via your Claude subscription (ACP)"
+                  : "via Anthropic API"}
+              </span>
+            )}
           </div>
           <SheetDescription className="sr-only">
             Ask questions about your households, reviews, pipeline, tasks and

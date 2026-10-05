@@ -12,6 +12,7 @@
     "frame:rive": "node scripts/rive-frame.mjs"
   },
   "dependencies": {
+    "@agentclientprotocol/sdk": "^1.3.0",
     "@anthropic-ai/sdk": "^0.131.0",
     "@rive-app/canvas": "^2.31.0",
     "@rive-app/react-canvas": "^4.31.0",
