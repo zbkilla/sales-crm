@@ -13,6 +13,7 @@ import ProfileSection from "./profile-section";
 import type { Household, Person } from "@/data/households";
 import {
   contactMethods,
+  type ContactMethod,
   contactStatus,
   formatLocalTime,
   householdContact,
@@ -63,6 +64,19 @@ function LocalTime({ timeZone }: { timeZone: string }) {
   );
 }
 
+const PAIRS_CLASS =
+  "grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4 gap-y-3 text-[14px] leading-[1.35]";
+
+const CARD_PAIRS_CLASS = cn(
+  PAIRS_CLASS,
+  "@min-[38rem]:grid-cols-[max-content_max-content_max-content_minmax(0,1fr)]",
+);
+
+const DETAILS_PAIRS_CLASS = cn(
+  PAIRS_CLASS,
+  "@min-[38rem]:grid-cols-[max-content_minmax(0,1fr)_max-content_minmax(0,1.2fr)]",
+);
+
 function Empty() {
   return <span className="text-subtle">—</span>;
 }
@@ -99,6 +113,37 @@ export default function ContactCards({
   const contact = personContact(household.id, person.id);
   const methods = contactMethods(person, contact);
   const work = [person.jobTitle, person.employer].filter(Boolean).join(", ");
+
+  function methodRow(method: ContactMethod) {
+    return (
+      <ContactRow
+        key={`${method.kind}-${method.label}-${method.value}`}
+        icon={
+          method.kind === "phone" ? (
+            <PhoneIcon aria-hidden className="text-soft size-3.5" />
+          ) : (
+            <MailIcon aria-hidden className="text-soft size-3.5" />
+          )
+        }
+        label={method.label}
+      >
+        <a
+          href={method.href}
+          className="hover:text-soft ease-power3-in-out tabular-nums transition-colors duration-150"
+        >
+          {method.kind === "email" ? (
+            <>
+              {method.value.slice(0, method.value.indexOf("@") + 1)}
+              <wbr />
+              {method.value.slice(method.value.indexOf("@") + 1)}
+            </>
+          ) : (
+            method.value
+          )}
+        </a>
+      </ContactRow>
+    );
+  }
 
   function advisorValue(name: string | undefined) {
     if (!name) return <Empty />;
@@ -156,6 +201,8 @@ export default function ContactCards({
       { label: "Gender", value: contact?.gender ?? <Empty /> },
       { label: "Marital status", value: person.maritalStatus ?? <Empty /> },
       { label: "Occupation", value: work || <Empty /> },
+    ],
+    [
       { label: "Servicing advisor", value: advisorValue(household.advisor) },
       { label: "Writing advisor", value: advisorValue(record?.writingAdvisor) },
       {
@@ -190,9 +237,44 @@ export default function ContactCards({
     ],
   ];
 
+  const showPlace = Boolean(record) && person.role !== "Deceased";
+  const reachRows = [
+    showPlace && record && (
+      <ContactRow
+        key="local-time"
+        icon={<ClockIcon aria-hidden className="text-soft size-3.5" />}
+        label="Local time"
+      >
+        <LocalTime timeZone={record.timeZone} />
+      </ContactRow>
+    ),
+    ...methods
+      .filter((method) => method.kind === "phone")
+      .map((method) => methodRow(method)),
+  ].filter(Boolean);
+  const placeRows = [
+    ...methods
+      .filter((method) => method.kind === "email")
+      .map((method) => methodRow(method)),
+    showPlace && record && (
+      <ContactRow
+        key="address"
+        icon={<BuildingIcon aria-hidden className="text-soft size-3.5" />}
+        label="Home"
+      >
+        <address className="flex flex-col not-italic">
+          <span>{record.address.street}</span>
+          <span>
+            {record.address.city}, {record.address.state} {record.address.zip}
+          </span>
+        </address>
+      </ContactRow>
+    ),
+  ].filter(Boolean);
+
   return (
     <>
-      <ProfileSection title="Contact card">
+      <ProfileSection title="Contact card" className="@container">
         {people.length > 1 && (
           <Tabs value={person.id} onValueChange={setSelectedId}>
             <TabsList
@@ -218,50 +300,21 @@ export default function ContactCards({
             {person.role}
           </Tag>
         </div>
-        <dl className="grid grid-cols-[minmax(7.5em,auto)_minmax(0,1fr)] gap-x-4 gap-y-3 text-[14px] leading-[1.35]">
-          {record && person.role !== "Deceased" && (
-            <ContactRow
-              icon={<ClockIcon aria-hidden className="text-soft size-3.5" />}
-              label="Local time"
-            >
-              <LocalTime timeZone={record.timeZone} />
-            </ContactRow>
-          )}
-          {methods.map((method) => (
-            <ContactRow
-              key={`${method.kind}-${method.label}-${method.value}`}
-              icon={
-                method.kind === "phone" ? (
-                  <PhoneIcon aria-hidden className="text-soft size-3.5" />
-                ) : (
-                  <MailIcon aria-hidden className="text-soft size-3.5" />
-                )
-              }
-              label={method.label}
-            >
-              <a
-                href={method.href}
-                className="hover:text-soft ease-power3-in-out tabular-nums transition-colors duration-150"
+        <div className={CARD_PAIRS_CLASS}>
+          {[reachRows, placeRows]
+            .filter((rows) => rows.length > 0)
+            .map((rows, index) => (
+              <dl
+                key={index === 0 ? "reach" : "place"}
+                className={cn(
+                  "col-span-2 grid grid-cols-subgrid content-start gap-y-3",
+                  index === 1 && "@min-[38rem]:[&>dt]:pl-8",
+                )}
               >
-                {method.value}
-              </a>
-            </ContactRow>
-          ))}
-          {record && person.role !== "Deceased" && (
-            <ContactRow
-              icon={<BuildingIcon aria-hidden className="text-soft size-3.5" />}
-              label="Home"
-            >
-              <address className="flex flex-col not-italic">
-                <span>{record.address.street}</span>
-                <span>
-                  {record.address.city}, {record.address.state}{" "}
-                  {record.address.zip}
-                </span>
-              </address>
-            </ContactRow>
-          )}
-        </dl>
+                {rows}
+              </dl>
+            ))}
+        </div>
         {methods.length === 0 && (
           <p className="caption-style text-subtle">
             No phone or email on file for {person.firstName}.
@@ -274,34 +327,32 @@ export default function ContactCards({
         )}
       </ProfileSection>
 
-      <ProfileSection title={`Contact details · ${person.firstName}`}>
-        <dl className="grid grid-cols-[minmax(9em,auto)_minmax(0,1fr)] text-[14px] leading-[1.35]">
-          {groups.flatMap((rows, index) =>
-            rows.map((row, rowIndex) => {
-              const divided = index > 0 && rowIndex === 0;
-              return (
+      <ProfileSection
+        title={`Contact details · ${person.firstName}`}
+        className="@container"
+      >
+        <div className={DETAILS_PAIRS_CLASS}>
+          {groups.map((rows, index) => (
+            <dl
+              key={rows[0].label}
+              className={cn(
+                "col-span-2 grid grid-cols-subgrid content-start",
+                index > 0 && "border-line-strong border-t pt-3",
+                index === 1 && "@min-[38rem]:border-t-0 @min-[38rem]:pt-0",
+                index % 2 === 1 && "@min-[38rem]:[&>dt]:pl-4",
+              )}
+            >
+              {rows.map((row) => (
                 <Fragment key={row.label}>
-                  <dt
-                    className={cn(
-                      "caption-style text-soft flex items-center py-1.5 pr-4 tracking-[0.04em] uppercase",
-                      divided && "border-line-strong mt-2.5 border-t pt-4",
-                    )}
-                  >
+                  <dt className="caption-style text-soft flex items-center py-1 tracking-[0.04em] uppercase">
                     {row.label}
                   </dt>
-                  <dd
-                    className={cn(
-                      "min-w-0 py-1.5 break-words",
-                      divided && "border-line-strong mt-2.5 border-t pt-4",
-                    )}
-                  >
-                    {row.value}
-                  </dd>
+                  <dd className="min-w-0 py-1 break-words">{row.value}</dd>
                 </Fragment>
-              );
-            }),
-          )}
-        </dl>
+              ))}
+            </dl>
+          ))}
+        </div>
       </ProfileSection>
     </>
   );
