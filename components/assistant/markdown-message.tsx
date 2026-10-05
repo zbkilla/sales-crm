@@ -58,7 +58,15 @@ function RequestLink({ number }: { number: string }) {
   );
 }
 
+const SAFE_PROTOCOL = /^(https?:|mailto:)/i;
+
+function safeUrl(url: string) {
+  if (url.startsWith(REQUEST_HREF)) return url;
+  return SAFE_PROTOCOL.test(url.trim()) ? url : "";
+}
+
 const COMPONENTS: Components = {
+  img: ({ alt }) => (alt ? <span className="text-soft">[{alt}]</span> : null),
   h1: Heading,
   h2: Heading,
   h3: Heading,
@@ -164,7 +172,11 @@ type MarkdownMessageProps = {
 export default function MarkdownMessage({ content }: MarkdownMessageProps) {
   return (
     <div className="text-foreground min-w-0 text-[14px] [overflow-wrap:anywhere]">
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={COMPONENTS}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={COMPONENTS}
+        urlTransform={safeUrl}
+      >
         {linkServiceRequests(content)}
       </ReactMarkdown>
     </div>
