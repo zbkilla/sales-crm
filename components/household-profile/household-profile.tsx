@@ -8,7 +8,6 @@ import { ScrollArea } from "@/components/_ui/scroll-area";
 import HouseholdMark from "@/components/_common/household-mark";
 import { FollowUpTag, SegmentTags } from "@/components/_common/household-tags";
 import PageHeader from "@/components/_common/page-header";
-import HouseholdMembers from "@/components/households/detail/household-members";
 import Portfolio from "@/components/households/detail/portfolio";
 import Opportunities from "@/components/households/detail/opportunities";
 import Engagement from "@/components/households/detail/engagement";
@@ -21,6 +20,7 @@ import AssetComposition from "./asset-composition";
 import DataTable from "./data-table";
 import OpenItemsList from "./open-items-list";
 import GoalsGrid from "./goals-grid";
+import ContactCards from "./contact-cards";
 import {
   MEETING_TONES,
   advisorByName,
@@ -489,6 +489,11 @@ function HouseholdProfileView({ household }: { household: Household }) {
                 </ProfileSection>
               </div>
               <div className="flex min-w-0 flex-col gap-4">
+                <ContactCards
+                  key={household.id}
+                  household={household}
+                  onOpenAdvisor={openProfile}
+                />
                 {openRequests.length > 0 && (
                   <ProfileSection
                     title={`Service requests · ${openRequests.length} open`}
@@ -505,12 +510,6 @@ function HouseholdProfileView({ household }: { household: Household }) {
                     <RequestList requests={openRequests} />
                   </ProfileSection>
                 )}
-                <ProfileSection title="Household">
-                  <HouseholdMembers
-                    household={household}
-                    onOpenAdvisor={() => openProfile(household.advisor)}
-                  />
-                </ProfileSection>
                 <ProfileSection title="Professional team">
                   {financials.team.length > 0 ? (
                     <ul className="flex flex-col gap-2.5">

@@ -2,6 +2,7 @@ import Avatar from "@/components/_ui/avatar";
 import Button from "@/components/_ui/button";
 import Tag from "@/components/_ui/tag";
 import { advisorByName, type Household, type Person } from "@/data/households";
+import { orderedPeople } from "@/lib/contacts";
 import { ageFrom } from "@/lib/households";
 import MailIcon from "@/public/assets/images/households/detail/mail-04.svg";
 import PhoneIcon from "@/public/assets/images/households/detail/phone.svg";
@@ -10,18 +11,6 @@ type HouseholdMembersProps = {
   household: Household;
   onOpenAdvisor: () => void;
 };
-
-const ROLE_ORDER = [
-  "Head of household",
-  "Spouse",
-  "Partner",
-  "Other adult",
-  "Non-dependent child",
-  "Dependent child",
-  "Grandchild",
-  "Other dependent",
-  "Deceased",
-];
 
 function personMeta(person: Person) {
   const work = [person.jobTitle, person.employer].filter(Boolean).join(", ");
@@ -41,9 +30,7 @@ export default function HouseholdMembers({
   onOpenAdvisor,
 }: HouseholdMembersProps) {
   const advisor = advisorByName(household.advisor);
-  const people = [...household.people].sort(
-    (a, b) => ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role),
-  );
+  const people = orderedPeople(household);
 
   return (
     <div className="flex flex-col gap-4">
