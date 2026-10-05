@@ -50,6 +50,30 @@ export const SITE_ROUTES: SiteRoute[] = [
     changeFrequency: "weekly",
     priority: 0.8,
   },
+  {
+    path: "/tasks",
+    title: "Tasks",
+    description:
+      "Tasks for the advisor team, grouped by due date with priorities and linked households.",
+    changeFrequency: "weekly",
+    priority: 0.7,
+  },
+  {
+    path: "/projects",
+    title: "Projects",
+    description:
+      "Client service projects such as onboarding, money movement, RMDs and reviews, tracked by milestone.",
+    changeFrequency: "weekly",
+    priority: 0.7,
+  },
+  {
+    path: "/meetings",
+    title: "Meetings",
+    description:
+      "Upcoming client and prospect meetings with prep briefs, and past meetings with AI summaries.",
+    changeFrequency: "weekly",
+    priority: 0.7,
+  },
 ];
 
 type PageMetadataOptions = {

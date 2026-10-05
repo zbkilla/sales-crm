@@ -5,7 +5,8 @@ import { ScrollArea } from "@/components/_ui/scroll-area";
 import SidebarNavItem from "./sidebar-nav-item";
 import SidebarSection from "./sidebar-section";
 import { usePathname } from "next/navigation";
-import { reviewStatus } from "@/lib/households";
+import { CURRENT_USER } from "@/data/households";
+import { TODAY, reviewStatus } from "@/lib/households";
 import { useHouseholdsStore } from "@/stores/households-store";
 import Logo from "@/public/assets/images/_common/logo.svg";
 import BuildingIcon from "@/public/assets/images/households/sidebar/building.svg";
@@ -39,6 +40,15 @@ export default function SidebarContent() {
     (state) => state.resetReviewsFilters,
   );
   const setPipelineTab = useHouseholdsStore((state) => state.setPipelineTab);
+  const tasks = useHouseholdsStore((state) => state.tasks);
+  const projects = useHouseholdsStore((state) => state.projects);
+  const upcomingMeetings = useHouseholdsStore(
+    (state) => state.upcomingMeetings,
+  );
+  const setAssistantOpen = useHouseholdsStore(
+    (state) => state.setAssistantOpen,
+  );
+  const resetDemoData = useHouseholdsStore((state) => state.resetDemoData);
 
   function navigate(action?: () => void) {
     return () => {
@@ -48,6 +58,16 @@ export default function SidebarContent() {
   }
   const reviewsDue = households.filter(
     (household) => reviewStatus(household) === "overdue",
+  ).length;
+  const myTasksDue = tasks.filter(
+    (task) =>
+      task.status === "todo" &&
+      task.assignee === CURRENT_USER.name &&
+      task.due !== null &&
+      task.due <= TODAY,
+  ).length;
+  const activeProjects = projects.filter(
+    (project) => project.status === "in_progress",
   ).length;
 
   return (
@@ -90,9 +110,35 @@ export default function SidebarContent() {
               active={pathname === "/opportunities"}
               onClick={navigate()}
             />
-            <SidebarNavItem icon={ListIcon} label="Projects" count={7} />
-            <SidebarNavItem icon={BarChartIcon} label="Meetings" />
-            <SidebarNavItem icon={TargetIcon} label="Tasks" count={12} />
+            <SidebarNavItem
+              icon={ListIcon}
+              label="Projects"
+              count={activeProjects}
+              href="/projects"
+              active={pathname === "/projects"}
+              onClick={navigate()}
+            />
+            <SidebarNavItem
+              icon={BarChartIcon}
+              label="Meetings"
+              count={upcomingMeetings.length}
+              href="/meetings"
+              active={pathname === "/meetings"}
+              onClick={navigate()}
+            />
+            <SidebarNavItem
+              icon={TargetIcon}
+              label="Tasks"
+              count={myTasksDue}
+              href="/tasks"
+              active={pathname === "/tasks"}
+              onClick={navigate()}
+            />
+            <SidebarNavItem
+              icon={MessageQuestionIcon}
+              label="Book chat"
+              onClick={navigate(() => setAssistantOpen(true))}
+            />
             <SidebarNavItem icon={BookClosedIcon} label="Other contacts" />
             <SidebarNavItem icon={MailIcon} label="Sequences" />
           </SidebarSection>
@@ -154,15 +200,15 @@ export default function SidebarContent() {
       <div className="border-sidebar-border bg-sidebar-accent flex shrink-0 items-center justify-between gap-2 border-b p-4">
         <div className="flex flex-col gap-2">
           <span className="lead-style block font-medium tracking-[-0.01em]">
-            14 Days
+            Demo book
           </span>
           <span className="caption-style text-subtle block">
-            Left on trials
+            Saved in this browser
           </span>
         </div>
-        <Button variant="muted" size="md">
+        <Button variant="muted" size="md" onClick={resetDemoData}>
           <WalletIcon aria-hidden className="size-3.5" />
-          Add Billings
+          Reset data
         </Button>
       </div>
     </div>

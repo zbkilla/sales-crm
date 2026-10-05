@@ -43,13 +43,13 @@ export default function FilterMenu({
           size="none"
           aria-label={ariaLabel}
           className={cn(
-            "group h-[30px] gap-0 overflow-hidden text-[12px] data-[state=open]:bg-muted",
+            "group data-[state=open]:bg-muted h-[30px] gap-0 overflow-hidden text-[12px]",
             className,
           )}
         >
           {label && (
             <>
-              <span className="px-[9px] font-normal text-subtle">{label}</span>
+              <span className="text-subtle px-[9px] font-normal">{label}</span>
               <span aria-hidden className="h-full w-px bg-white/8" />
             </>
           )}
@@ -62,7 +62,7 @@ export default function FilterMenu({
             {current?.label ?? value}
             <ChevronDownIcon
               aria-hidden
-              className="size-3 text-[#898b8d] transition-transform duration-200 ease-power3-out group-data-[state=open]:rotate-180"
+              className="ease-power3-out size-3 text-[#898b8d] transition-transform duration-200 group-data-[state=open]:rotate-180"
             />
           </span>
         </Button>

@@ -10,6 +10,7 @@ import { useHouseholdsStore } from "@/stores/households-store";
 import MenuIcon from "@/public/assets/images/_common/menu.svg";
 import ActiveDot from "@/public/assets/images/households/header/active-dot.svg";
 import SearchIcon from "@/public/assets/images/_common/search.svg";
+import ChatIcon from "@/public/assets/images/households/sidebar/message-question.svg";
 
 export type PageTab = {
   value: string;
@@ -33,6 +34,9 @@ export default function PageHeader({
   const setSidebarOpen = useHouseholdsStore((state) => state.setSidebarOpen);
   const setSearchOpen = useHouseholdsStore((state) => state.setSearchOpen);
   const openProfile = useHouseholdsStore((state) => state.openProfile);
+  const setAssistantOpen = useHouseholdsStore(
+    (state) => state.setAssistantOpen,
+  );
 
   return (
     <header className="shrink-0">
@@ -64,6 +68,16 @@ export default function PageHeader({
           >
             <SearchIcon aria-hidden className="size-3.5" />
           </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            aria-label="Ask AgentOS"
+            aria-keyshortcuts="Meta+J Control+J"
+            onClick={() => setAssistantOpen(true)}
+          >
+            <ChatIcon aria-hidden className="size-3.5" />
+            <span className="hidden sm:inline">Ask AgentOS</span>
+          </Button>
           <Notifications />
           <Button
             variant="secondary"
@@ -84,7 +98,9 @@ export default function PageHeader({
             <TabsTrigger key={tab.value} value={tab.value}>
               <span className="flex items-center gap-1.5">
                 {tab.label}
-                {tab.count !== undefined && <CountBadge>{tab.count}</CountBadge>}
+                {tab.count !== undefined && (
+                  <CountBadge>{tab.count}</CountBadge>
+                )}
               </span>
             </TabsTrigger>
           ))}

@@ -21,6 +21,7 @@ import Portfolio from "./portfolio";
 import Opportunities from "./opportunities";
 import Engagement from "./engagement";
 import MeetingCard from "./meeting-card";
+import { ProjectList, TaskList } from "./work-items";
 import { TREND_WINDOWS, type Household } from "@/data/households";
 import { useHouseholdsStore } from "@/stores/households-store";
 import BuildingIcon from "@/public/assets/images/households/detail/building.svg";
@@ -50,9 +51,19 @@ export default function HouseholdDetail() {
   const restoreToClient = useHouseholdsStore((state) => state.restoreToClient);
   const logReview = useHouseholdsStore((state) => state.logReview);
   const logTouchpoint = useHouseholdsStore((state) => state.logTouchpoint);
+  const tasks = useHouseholdsStore((state) => state.tasks);
+  const projects = useHouseholdsStore((state) => state.projects);
+  const toggleTask = useHouseholdsStore((state) => state.toggleTask);
   const [trendWindow, setTrendWindow] = useState(TREND_WINDOWS[1]);
 
   const household = households.find((item) => item.id === detailId);
+  const openTasks = tasks.filter(
+    (task) => task.householdId === detailId && task.status === "todo",
+  );
+  const activeProjects = projects.filter(
+    (project) =>
+      project.householdId === detailId && project.status === "in_progress",
+  );
 
   function runPrimary() {
     if (!household) return;
@@ -132,6 +143,18 @@ export default function HouseholdDetail() {
             {household.opportunities.length > 0 && (
               <DetailSection title="Opportunities">
                 <Opportunities household={household} />
+              </DetailSection>
+            )}
+
+            {activeProjects.length > 0 && (
+              <DetailSection title="Active projects">
+                <ProjectList projects={activeProjects} />
+              </DetailSection>
+            )}
+
+            {openTasks.length > 0 && (
+              <DetailSection title="Open tasks">
+                <TaskList tasks={openTasks} onToggle={toggleTask} />
               </DetailSection>
             )}
 

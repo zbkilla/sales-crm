@@ -12,14 +12,15 @@ type NotificationItemProps = {
   onSelect: () => void;
 };
 
-const KIND_LABELS: Record<NotificationKind, { label: string; tone: TagTone }> = {
-  mention: { label: "Mention", tone: "blue" },
-  departure: { label: "Account alert", tone: "red" },
-  docusign: { label: "DocuSign", tone: "teal" },
-  review: { label: "Review", tone: "amber" },
-  task: { label: "Task", tone: "neutral" },
-  nudge: { label: "Nudge", tone: "purple" },
-};
+const KIND_LABELS: Record<NotificationKind, { label: string; tone: TagTone }> =
+  {
+    mention: { label: "Mention", tone: "blue" },
+    departure: { label: "Account alert", tone: "red" },
+    docusign: { label: "DocuSign", tone: "teal" },
+    review: { label: "Review", tone: "amber" },
+    task: { label: "Task", tone: "neutral" },
+    nudge: { label: "Nudge", tone: "purple" },
+  };
 
 export default function NotificationItem({
   notification,
