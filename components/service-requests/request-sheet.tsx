@@ -41,6 +41,7 @@ import {
   requestProgress,
   slaStatus,
   turnaroundBD,
+  requestName,
 } from "@/lib/service-requests";
 import { cn } from "@/lib/utils";
 import { useHouseholdsStore } from "@/stores/households-store";
@@ -220,9 +221,11 @@ function RequestBody({ request }: { request: ServiceRequest }) {
               </Tag>
             )}
           </div>
-          <h2>{request.title}</h2>
-          {template && request.title !== template.name && (
-            <span className="caption-style text-subtle">{template.name}</span>
+          <h2>{requestName(request)}</h2>
+          {template && (
+            <span className="caption-style text-subtle">
+              {template.category}
+            </span>
           )}
         </div>
 

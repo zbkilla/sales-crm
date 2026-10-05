@@ -15,6 +15,10 @@ import type { FollowUpStatus } from "@/data/households";
 import { addBusinessDays, businessDaysBetween } from "@/lib/business-days";
 import { TODAY } from "@/lib/households";
 
+export function requestName(request: Pick<ServiceRequest, "templateKey">) {
+  return requestTemplate(request.templateKey)?.name ?? request.templateKey;
+}
+
 export function scheduleSteps(
   template: RequestTemplate,
   startISO: string,
@@ -60,7 +64,6 @@ export function buildSeedRequests(): ServiceRequest[] {
         id: seed.id,
         number: seed.number,
         templateKey: seed.templateKey,
-        title: seed.title ?? template.name,
         householdId: seed.householdId,
         accountRef: seed.accountRef ?? null,
         amount: seed.amount ?? null,
@@ -90,7 +93,6 @@ export function createRequest({
   amount,
   owner,
   advisor,
-  title,
 }: {
   template: RequestTemplate;
   number: number;
@@ -99,13 +101,11 @@ export function createRequest({
   amount: number | null;
   owner: string;
   advisor: string;
-  title?: string;
 }): ServiceRequest {
   return {
     id: `sr-${number}`,
     number,
     templateKey: template.key,
-    title: title?.trim() || template.name,
     householdId,
     accountRef,
     amount,

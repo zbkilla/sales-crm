@@ -67,7 +67,6 @@ function NewRequestForm({
   );
   const [templateKey, setTemplateKey] = useState(REQUEST_TEMPLATES[0].key);
   const [householdId, setHouseholdId] = useState(presetHousehold ?? "");
-  const [title, setTitle] = useState("");
   const [accountRef, setAccountRef] = useState("");
   const [amount, setAmount] = useState("");
   const [owner, setOwner] = useState(OPERATIONS_TEAM[0]);
@@ -105,7 +104,6 @@ function NewRequestForm({
           showAmount && amount ? Math.max(0, Math.round(Number(amount))) : null,
         owner,
         advisor: household.advisor,
-        title,
       }),
     );
   }
@@ -171,20 +169,6 @@ function NewRequestForm({
               ))}
             </SelectContent>
           </Select>
-        </Field>
-
-        <Field
-          label="Title"
-          htmlFor="request-title"
-          hint="Optional. Defaults to the request type."
-        >
-          <Input
-            id="request-title"
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            placeholder={template.name}
-            autoComplete="off"
-          />
         </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">

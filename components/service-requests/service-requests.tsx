@@ -28,6 +28,7 @@ import {
   requestProgress,
   slaStatus,
   turnaroundBD,
+  requestName,
 } from "@/lib/service-requests";
 import { cn } from "@/lib/utils";
 import {
@@ -289,13 +290,12 @@ export default function ServiceRequests() {
                           <span className="caption-style text-subtle tabular-nums">
                             SR-{request.number}
                           </span>
-                          <span className="truncate">{request.title}</span>
+                          <span className="truncate">
+                            {requestName(request)}
+                          </span>
                         </span>
                         <span className="caption-style text-subtle truncate">
                           {template?.category}
-                          {request.title !== template?.name
-                            ? ` · ${template?.name}`
-                            : ""}
                         </span>
                       </span>
                     </TableCell>

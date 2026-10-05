@@ -10,6 +10,7 @@ import {
   currentStep,
   requestProgress,
   slaStatus,
+  requestName,
 } from "@/lib/service-requests";
 import { useHouseholdsStore } from "@/stores/households-store";
 
@@ -39,7 +40,7 @@ export default function RequestList({ requests }: RequestListProps) {
                   <span className="caption-style text-subtle tabular-nums">
                     SR-{request.number}
                   </span>
-                  <span className="truncate">{request.title}</span>
+                  <span className="truncate">{requestName(request)}</span>
                 </span>
                 <RequestStatusTag status={request.status} />
               </span>

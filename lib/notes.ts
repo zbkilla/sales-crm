@@ -3,6 +3,7 @@ import type { Note, NoteComment } from "@/data/notes";
 import type { ServiceRequest } from "@/data/service-requests";
 import type { Task } from "@/data/tasks";
 import { TODAY, addDays, formatDate } from "@/lib/households";
+import { requestName } from "@/lib/service-requests";
 
 export type NoteEntry = {
   id: string;
@@ -72,7 +73,7 @@ export function householdNoteEntries(
         author: request.verifiedBy ?? request.owner,
         createdAt: request.completedOn as string,
         category: "Service request",
-        activity: `SR-${request.number} ${request.title}`,
+        activity: `SR-${request.number} ${requestName(request)}`,
         requestId: request.id,
         accountIds: [],
       })),

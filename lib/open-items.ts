@@ -1,6 +1,6 @@
 import type { Household } from "@/data/households";
 import type { ServiceRequest } from "@/data/service-requests";
-import { isOpen } from "@/lib/service-requests";
+import { isOpen, requestName } from "@/lib/service-requests";
 import type { Task } from "@/data/tasks";
 import {
   accountCategory,
@@ -67,7 +67,7 @@ export function openItems(
       items.push({
         id: `nigo-${request.id}`,
         severity: "critical",
-        title: `Request in NIGO: ${request.title}`,
+        title: `Request in NIGO: ${requestName(request)}`,
         detail: latest
           ? `SR-${request.number} · ${latest.reason}. ${latest.note}`
           : `SR-${request.number} needs rework.`,
@@ -76,7 +76,7 @@ export function openItems(
       items.push({
         id: `sla-${request.id}`,
         severity: "critical",
-        title: `Request past SLA: ${request.title}`,
+        title: `Request past SLA: ${requestName(request)}`,
         detail: `SR-${request.number} was due ${formatDate(request.dueOn)}.`,
       });
     }

@@ -2,7 +2,7 @@ import type { Household } from "@/data/households";
 import type { ScheduledMeeting } from "@/data/meetings";
 import { requestTemplate } from "@/data/request-templates";
 import type { ServiceRequest } from "@/data/service-requests";
-import { currentStep, isOpen } from "@/lib/service-requests";
+import { currentStep, isOpen, requestName } from "@/lib/service-requests";
 import type { Task } from "@/data/tasks";
 import { ASSET_CATEGORIES } from "@/data/financials";
 import {
@@ -197,8 +197,7 @@ export function buildBookSnapshot({
       const step = currentStep(request);
       return {
         number: `SR-${request.number}`,
-        title: request.title,
-        type: template?.name ?? request.templateKey,
+        type: requestName(request),
         category: template?.category ?? null,
         household: nameOf(request.householdId),
         status: request.status,

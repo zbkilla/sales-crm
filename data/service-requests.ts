@@ -62,7 +62,6 @@ export type ServiceRequest = {
   id: string;
   number: number;
   templateKey: string;
-  title: string;
   householdId: string;
   accountRef: string | null;
   amount: number | null;
@@ -83,7 +82,6 @@ export type RequestSeed = {
   id: string;
   number: number;
   templateKey: string;
-  title?: string;
   householdId: string;
   accountRef?: string;
   amount?: number;
@@ -119,7 +117,6 @@ export const REQUEST_SEEDS: RequestSeed[] = [
     id: "sr-morales-life",
     number: 1032,
     templateKey: "life-insurance-app",
-    title: "Replacement term policy for Victor",
     householdId: "morales",
     accountRef: "Term life, $1M face",
     amount: 1000000,
@@ -160,7 +157,6 @@ export const REQUEST_SEEDS: RequestSeed[] = [
     id: "sr-feldman-rollover",
     number: 1035,
     templateKey: "rollover-401k",
-    title: "Northfield 401(k) rollover to IRA",
     householdId: "feldman",
     accountRef: "Northfield 401(k) •••• 0091",
     amount: 410000,
@@ -173,7 +169,6 @@ export const REQUEST_SEEDS: RequestSeed[] = [
     id: "sr-brooks-ach",
     number: 1036,
     templateKey: "ach-one-time",
-    title: "Cash balance plan initial contribution",
     householdId: "brooks",
     accountRef: "Individual •••• 3071",
     amount: 45000,
@@ -195,7 +190,6 @@ export const REQUEST_SEEDS: RequestSeed[] = [
     id: "sr-coleman-roth",
     number: 1037,
     templateKey: "new-account-ira",
-    title: "Open Roth IRA for Brian",
     householdId: "coleman",
     accountRef: "Roth IRA (new)",
     owner: "Theo Grant",
@@ -207,7 +201,6 @@ export const REQUEST_SEEDS: RequestSeed[] = [
     id: "sr-reyes-plan",
     number: 1038,
     templateKey: "plan-update",
-    title: "Liquidity event plan update",
     householdId: "reyes",
     owner: "Sam Ito",
     advisor: "Marcus Bell",
@@ -218,7 +211,6 @@ export const REQUEST_SEEDS: RequestSeed[] = [
     id: "sr-chen-beneficiary",
     number: 1039,
     templateKey: "beneficiary-change",
-    title: "Name beneficiaries on inherited IRA",
     householdId: "chen",
     accountRef: "Inherited IRA •••• 8130",
     owner: "Leah Moreno",
@@ -243,7 +235,6 @@ export const REQUEST_SEEDS: RequestSeed[] = [
     id: "sr-patel-journal",
     number: 1041,
     templateKey: "internal-journal",
-    title: "RSU sale proceeds to joint account",
     householdId: "patel",
     accountRef: "Joint •••• 2290",
     amount: 120000,
@@ -256,7 +247,6 @@ export const REQUEST_SEEDS: RequestSeed[] = [
     id: "sr-bishop-acat",
     number: 1042,
     templateKey: "acat-full-in",
-    title: "ACAT joint brokerage on proposal acceptance",
     householdId: "bishop",
     accountRef: "Joint brokerage at current broker",
     amount: 1200000,
