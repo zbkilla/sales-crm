@@ -1,17 +1,19 @@
 "use client";
 
-import type { ComponentProps } from "react";
+import type { ComponentProps, Ref } from "react";
 import { ScrollArea as ScrollAreaPrimitive } from "radix-ui";
 import { cn } from "@/lib/utils";
 
 type ScrollAreaProps = ComponentProps<typeof ScrollAreaPrimitive.Root> & {
   orientation?: "vertical" | "horizontal" | "both";
   viewportClassName?: string;
+  viewportRef?: Ref<HTMLDivElement>;
 };
 
 function ScrollArea({
   className,
   viewportClassName,
+  viewportRef,
   orientation = "vertical",
   type = "hover",
   scrollHideDelay = 600,
@@ -27,6 +29,7 @@ function ScrollArea({
       {...props}
     >
       <ScrollAreaPrimitive.Viewport
+        ref={viewportRef}
         data-slot="scroll-area-viewport"
         className={cn(
           "size-full rounded-[inherit] outline-none [&>div]:block!",

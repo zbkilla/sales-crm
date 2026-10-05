@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/_ui/select";
+import { ScrollArea } from "@/components/_ui/scroll-area";
 import Tag from "@/components/_ui/tag";
 import OpenItemsList from "./open-items-list";
 import { CURRENT_USER, type Household } from "@/data/households";
@@ -41,15 +42,15 @@ type NotesPanelProps = {
   items: OpenItem[];
 };
 
-const PAGE_SIZE = 5;
-
 const TEXTAREA_CLASS =
   "border-line-strong bg-secondary text-foreground placeholder:text-subtle focus-visible:border-ring ease-power3-out w-full resize-none rounded-lg border px-3 py-2.5 text-[14px] transition-[border-color] duration-150 outline-none";
 
 export default function NotesPanel({ household, items }: NotesPanelProps) {
   const [view, setView] = useState<View>("notes");
   const [composing, setComposing] = useState(false);
-  const [visible, setVisible] = useState(PAGE_SIZE);
+  const [savedCount, setSavedCount] = useState(0);
+  const [overflowing, setOverflowing] = useState(false);
+  const viewportRef = useRef<HTMLDivElement>(null);
   const notes = useHouseholdsStore((state) => state.notes);
   const tasks = useHouseholdsStore((state) => state.tasks);
   const serviceRequests = useHouseholdsStore((state) => state.serviceRequests);
@@ -63,8 +64,18 @@ export default function NotesPanel({ household, items }: NotesPanelProps) {
     comments: noteComments,
     pinnedIds: pinnedNoteIds,
   });
-  const shown = entries.slice(0, visible);
-  const remaining = entries.length - shown.length;
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    const content = viewport?.firstElementChild;
+    if (!viewport || !content) return;
+    const observer = new ResizeObserver(() => {
+      setOverflowing(viewport.scrollHeight > viewport.clientHeight + 1);
+    });
+    observer.observe(viewport);
+    observer.observe(content);
+    return () => observer.disconnect();
+  }, [view, savedCount]);
 
   return (
     <section
@@ -109,49 +120,50 @@ export default function NotesPanel({ household, items }: NotesPanelProps) {
         )}
       </div>
 
-      {view === "open-items" ? (
-        <div className="flex flex-col gap-4">
-          <p className="caption-style text-subtle">
-            Unconfirmed, stale or overdue records to resolve before the next
-            touchpoint.
-          </p>
-          <OpenItemsList items={items} />
-        </div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {composing && (
-            <NoteComposer
-              household={household}
-              onDone={() => {
-                setComposing(false);
-                setVisible((count) => Math.max(count, PAGE_SIZE));
-              }}
-            />
-          )}
-          {entries.length === 0 && !composing ? (
-            <p className="caption-style text-subtle">
-              No notes yet. Add one to capture calls, decisions and follow-ups.
-            </p>
+      {view === "open-items" && (
+        <p className="caption-style text-subtle -mt-1">
+          Unconfirmed, stale or overdue records to resolve before the next
+          touchpoint.
+        </p>
+      )}
+      {view === "notes" && composing && (
+        <NoteComposer
+          household={household}
+          onDone={(saved) => {
+            setComposing(false);
+            if (saved) setSavedCount((count) => count + 1);
+          }}
+        />
+      )}
+      <ScrollArea
+        key={`${view}-${savedCount}`}
+        aria-label={view === "notes" ? "Notes" : "Open items list"}
+        className="-mr-3"
+        viewportRef={viewportRef}
+        viewportClassName={cn(
+          "xl:max-h-[min(560px,60vh)]",
+          overflowing && "overscroll-contain",
+        )}
+      >
+        <div className="pr-3 pb-1">
+          {view === "open-items" ? (
+            <OpenItemsList items={items} />
+          ) : entries.length === 0 ? (
+            !composing && (
+              <p className="caption-style text-subtle">
+                No notes yet. Add one to capture calls, decisions and
+                follow-ups.
+              </p>
+            )
           ) : (
             <ul className="flex flex-col gap-3">
-              {shown.map((entry) => (
+              {entries.map((entry) => (
                 <NoteCard key={entry.id} entry={entry} household={household} />
               ))}
             </ul>
           )}
-          {remaining > 0 && (
-            <Button
-              variant="subtle"
-              size="sm"
-              onClick={() => setVisible((count) => count + PAGE_SIZE)}
-              className="self-center"
-            >
-              Show {Math.min(remaining, PAGE_SIZE)} older{" "}
-              {Math.min(remaining, PAGE_SIZE) === 1 ? "note" : "notes"}
-            </Button>
-          )}
         </div>
-      )}
+      </ScrollArea>
     </section>
   );
 }
@@ -161,7 +173,7 @@ function NoteComposer({
   onDone,
 }: {
   household: Household;
-  onDone: () => void;
+  onDone: (saved: boolean) => void;
 }) {
   const addNote = useHouseholdsStore((state) => state.addNote);
   const [category, setCategory] = useState<NoteCategory>("General information");
@@ -200,7 +212,7 @@ function NoteComposer({
         .map((account) => account.id)
         .filter((id) => accountIds.includes(id)),
     });
-    onDone();
+    onDone(true);
   }
 
   return (
@@ -271,7 +283,7 @@ function NoteComposer({
         </fieldset>
       )}
       <div className="flex justify-end gap-2">
-        <Button variant="subtle" size="sm" onClick={onDone}>
+        <Button variant="subtle" size="sm" onClick={() => onDone(false)}>
           Cancel
         </Button>
         <Button variant="primary" size="sm" type="submit">
