@@ -1,15 +1,35 @@
 import { create } from "zustand";
 import {
+  CLIENT_STAGES,
   HOUSEHOLDS,
+  PROSPECT_STAGES,
   type Household,
   type HouseholdTab,
+  type OpportunityStage,
+  type ReviewCadence,
   type SortKey,
+  type Tier,
   type Touchpoint,
 } from "@/data/households";
 import { NOTIFICATIONS } from "@/data/notifications";
 import { DEFAULT_FILTERS, TODAY } from "@/lib/households";
 
 export type NewHouseholdType = "Client" | "Prospect";
+export type ReviewsTab = "upcoming" | "touchpoints";
+export type PipelineTab = "prospect" | "client";
+export type OpportunityOutcome = "won" | "lost";
+
+export type ReviewsFilters = {
+  advisor: string;
+  tier: string;
+  status: string;
+};
+
+export const DEFAULT_REVIEWS_FILTERS: ReviewsFilters = {
+  advisor: "all",
+  tier: "any",
+  status: "any",
+};
 
 type HouseholdsState = {
   households: Household[];
@@ -52,7 +72,33 @@ type HouseholdsState = {
   restoreToClient: (id: string) => void;
   logReview: (id: string) => void;
   logTouchpoint: (id: string, label: Touchpoint["label"]) => void;
+  setTier: (id: string, tier: Tier) => void;
+  setReviewCadence: (id: string, cadence: ReviewCadence | null) => void;
+  reviewsTab: ReviewsTab;
+  reviewsFilters: ReviewsFilters;
+  setReviewsTab: (tab: ReviewsTab) => void;
+  setReviewsFilter: (key: keyof ReviewsFilters, value: string) => void;
+  resetReviewsFilters: () => void;
+  pipelineTab: PipelineTab;
+  pipelineAdvisor: string;
+  setPipelineTab: (tab: PipelineTab) => void;
+  setPipelineAdvisor: (advisor: string) => void;
+  moveOpportunity: (
+    householdId: string,
+    opportunityId: string,
+    stage: OpportunityStage,
+  ) => void;
+  closeOpportunity: (
+    householdId: string,
+    opportunityId: string,
+    outcome: OpportunityOutcome,
+  ) => void;
 };
+
+function stageProbability(household: Household, stage: OpportunityStage) {
+  const stages = household.type === "Prospect" ? PROSPECT_STAGES : CLIENT_STAGES;
+  return stages.find((item) => item.value === stage)?.probability ?? 10;
+}
 
 const TAB_FOR_TYPE: Record<Household["type"], HouseholdTab> = {
   Client: "clients",
@@ -171,5 +217,66 @@ export const useHouseholdsStore = create<HouseholdsState>((set) => ({
         lastTouchpoint: { date: TODAY, label },
         touchpointTrend: bumpTrend(household.touchpointTrend),
       })),
+    })),
+  setTier: (id, tier) =>
+    set((state) => ({
+      households: updateHousehold(state.households, id, (household) => ({
+        ...household,
+        tier,
+      })),
+    })),
+  setReviewCadence: (id, cadence) =>
+    set((state) => ({
+      households: updateHousehold(state.households, id, (household) => ({
+        ...household,
+        reviewCadence: cadence ?? undefined,
+      })),
+    })),
+  reviewsTab: "upcoming",
+  reviewsFilters: DEFAULT_REVIEWS_FILTERS,
+  setReviewsTab: (reviewsTab) => set({ reviewsTab }),
+  setReviewsFilter: (key, value) =>
+    set((state) => ({
+      reviewsFilters: { ...state.reviewsFilters, [key]: value },
+    })),
+  resetReviewsFilters: () => set({ reviewsFilters: DEFAULT_REVIEWS_FILTERS }),
+  pipelineTab: "prospect",
+  pipelineAdvisor: "all",
+  setPipelineTab: (pipelineTab) => set({ pipelineTab }),
+  setPipelineAdvisor: (pipelineAdvisor) => set({ pipelineAdvisor }),
+  moveOpportunity: (householdId, opportunityId, stage) =>
+    set((state) => ({
+      households: updateHousehold(state.households, householdId, (household) => ({
+        ...household,
+        opportunities: household.opportunities.map((opportunity) =>
+          opportunity.id === opportunityId
+            ? {
+                ...opportunity,
+                stage,
+                probability: stageProbability(household, stage),
+              }
+            : opportunity,
+        ),
+      })),
+    })),
+  closeOpportunity: (householdId, opportunityId, outcome) =>
+    set((state) => ({
+      households: updateHousehold(state.households, householdId, (household) => {
+        const remaining = household.opportunities.filter(
+          (opportunity) => opportunity.id !== opportunityId,
+        );
+        if (outcome === "won" && household.type === "Prospect") {
+          return {
+            ...household,
+            type: "Client",
+            tier: household.tier ?? "C",
+            clientSince: TODAY,
+            lastReview: null,
+            opportunities: remaining,
+            estAssets: undefined,
+          };
+        }
+        return { ...household, opportunities: remaining };
+      }),
     })),
 }));

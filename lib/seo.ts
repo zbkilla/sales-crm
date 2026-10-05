@@ -34,6 +34,22 @@ export const SITE_ROUTES: SiteRoute[] = [
     changeFrequency: "weekly",
     priority: 1,
   },
+  {
+    path: "/reviews",
+    title: "Reviews",
+    description:
+      "Upcoming client reviews and touchpoint tracking by tier, cadence and advisor.",
+    changeFrequency: "weekly",
+    priority: 0.8,
+  },
+  {
+    path: "/opportunities",
+    title: "Opportunities",
+    description:
+      "Prospect pipeline and client growth opportunities with weighted forecasts by stage.",
+    changeFrequency: "weekly",
+    priority: 0.8,
+  },
 ];
 
 type PageMetadataOptions = {

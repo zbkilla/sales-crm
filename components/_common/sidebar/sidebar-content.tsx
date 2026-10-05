@@ -4,6 +4,7 @@ import Button from "@/components/_ui/button";
 import { ScrollArea } from "@/components/_ui/scroll-area";
 import SidebarNavItem from "./sidebar-nav-item";
 import SidebarSection from "./sidebar-section";
+import { usePathname } from "next/navigation";
 import { reviewStatus } from "@/lib/households";
 import { useHouseholdsStore } from "@/stores/households-store";
 import Logo from "@/public/assets/images/_common/logo.svg";
@@ -27,7 +28,24 @@ import MessageQuestionIcon from "@/public/assets/images/households/sidebar/messa
 import WalletIcon from "@/public/assets/images/households/sidebar/wallet.svg";
 
 export default function SidebarContent() {
+  const pathname = usePathname();
   const households = useHouseholdsStore((state) => state.households);
+  const setSidebarOpen = useHouseholdsStore((state) => state.setSidebarOpen);
+  const setReviewsTab = useHouseholdsStore((state) => state.setReviewsTab);
+  const setReviewsFilter = useHouseholdsStore(
+    (state) => state.setReviewsFilter,
+  );
+  const resetReviewsFilters = useHouseholdsStore(
+    (state) => state.resetReviewsFilters,
+  );
+  const setPipelineTab = useHouseholdsStore((state) => state.setPipelineTab);
+
+  function navigate(action?: () => void) {
+    return () => {
+      action?.();
+      setSidebarOpen(false);
+    };
+  }
   const reviewsDue = households.filter(
     (household) => reviewStatus(household) === "overdue",
   ).length;
@@ -53,10 +71,25 @@ export default function SidebarContent() {
               icon={BuildingIcon}
               label="Households"
               count={households.length}
-              active
+              href="/"
+              active={pathname === "/"}
+              onClick={navigate()}
             />
-            <SidebarNavItem icon={CalendarCheckIcon} label="Reviews" count={reviewsDue} />
-            <SidebarNavItem icon={ClipboardIcon} label="Opportunities" />
+            <SidebarNavItem
+              icon={CalendarCheckIcon}
+              label="Reviews"
+              count={reviewsDue}
+              href="/reviews"
+              active={pathname === "/reviews"}
+              onClick={navigate()}
+            />
+            <SidebarNavItem
+              icon={ClipboardIcon}
+              label="Opportunities"
+              href="/opportunities"
+              active={pathname === "/opportunities"}
+              onClick={navigate()}
+            />
             <SidebarNavItem icon={ListIcon} label="Projects" count={7} />
             <SidebarNavItem icon={BarChartIcon} label="Meetings" />
             <SidebarNavItem icon={TargetIcon} label="Tasks" count={12} />
@@ -77,14 +110,33 @@ export default function SidebarContent() {
             title="Reports"
             className="border-sidebar-border border-b"
           >
-            <SidebarNavItem icon={AlertTriangleIcon} label="Reviews overdue" />
+            <SidebarNavItem
+              icon={AlertTriangleIcon}
+              label="Reviews overdue"
+              href="/reviews"
+              onClick={navigate(() => {
+                resetReviewsFilters();
+                setReviewsTab("upcoming");
+                setReviewsFilter("status", "overdue");
+              })}
+            />
             <SidebarNavItem icon={BarChartAltIcon} label="Clients over $1M" />
             <SidebarNavItem icon={BarChartAltIcon} label="Upcoming birthdays" />
           </SidebarSection>
 
           <SidebarSection title="Pipelines">
-            <SidebarNavItem icon={DotYellow} label="Prospect pipeline" />
-            <SidebarNavItem icon={DotPink} label="Client growth" />
+            <SidebarNavItem
+              icon={DotYellow}
+              label="Prospect pipeline"
+              href="/opportunities"
+              onClick={navigate(() => setPipelineTab("prospect"))}
+            />
+            <SidebarNavItem
+              icon={DotPink}
+              label="Client growth"
+              href="/opportunities"
+              onClick={navigate(() => setPipelineTab("client"))}
+            />
             <SidebarNavItem icon={DotPurple} label="Rollovers" />
           </SidebarSection>
         </nav>

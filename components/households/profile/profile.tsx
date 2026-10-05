@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import Avatar from "@/components/_ui/avatar";
 import Button from "@/components/_ui/button";
 import { ScrollArea } from "@/components/_ui/scroll-area";
@@ -29,6 +30,7 @@ import MailIcon from "@/public/assets/images/households/detail/mail-04.svg";
 import PhoneIcon from "@/public/assets/images/households/detail/phone.svg";
 
 export default function Profile() {
+  const router = useRouter();
   const profileName = useHouseholdsStore((state) => state.profileName);
   const profileOpen = useHouseholdsStore((state) => state.profileOpen);
   const households = useHouseholdsStore((state) => state.households);
@@ -69,6 +71,7 @@ export default function Profile() {
     setAdvisor(isCurrentUser || !person ? ALL_ADVISORS : person.name);
     setActiveTab("clients");
     closeProfile();
+    router.push("/");
   }
 
   return (

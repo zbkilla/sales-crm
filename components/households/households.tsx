@@ -1,10 +1,6 @@
-import HouseholdsHeader from "./header/header";
+import HouseholdsHeader from "./header";
 import HouseholdsToolbar from "./toolbar/toolbar";
 import HouseholdsTable from "./table/households-table";
-import HouseholdDetail from "./detail/household-detail";
-import Profile from "./profile/profile";
-import NewHouseholdDialog from "./new-household/new-household-dialog";
-import CommandMenu from "./command-menu/command-menu";
 
 export default function Households() {
   return (
@@ -12,10 +8,6 @@ export default function Households() {
       <HouseholdsHeader />
       <HouseholdsToolbar />
       <HouseholdsTable />
-      <HouseholdDetail />
-      <Profile />
-      <NewHouseholdDialog />
-      <CommandMenu />
     </section>
   );
 }
