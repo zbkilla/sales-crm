@@ -25,6 +25,7 @@ export default function CommandMenu() {
   const openNewHousehold = useHouseholdsStore(
     (state) => state.openNewHousehold,
   );
+  const openNewRequest = useHouseholdsStore((state) => state.openNewRequest);
   const [query, setQuery] = useState("");
   const actionRan = useRef(false);
 
@@ -96,6 +97,23 @@ export default function CommandMenu() {
                 New {type.toLowerCase()}
               </CommandItem>
             ))}
+            <CommandItem
+              value="new-service-request"
+              keywords={[
+                "New service request",
+                "Account opening",
+                "ACAT",
+                "Rollover",
+                "Wire",
+                "Beneficiary",
+              ]}
+              onSelect={() => run(() => openNewRequest())}
+            >
+              <span className="bg-muted flex size-6 shrink-0 items-center justify-center rounded-md shadow-[0px_0px_0px_1px_#232323]">
+                <PlusIcon aria-hidden className="text-soft size-3" />
+              </span>
+              New service request
+            </CommandItem>
           </CommandGroup>
         </CommandList>
         <CommandFooter>

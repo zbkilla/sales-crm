@@ -93,7 +93,7 @@ export default function AssistantSheet() {
 
     const controller = new AbortController();
     abortRef.current = controller;
-    const { households, tasks, projects, upcomingMeetings } =
+    const { households, tasks, serviceRequests, upcomingMeetings } =
       useHouseholdsStore.getState();
 
     try {
@@ -108,7 +108,7 @@ export default function AssistantSheet() {
           book: buildBookSnapshot({
             households,
             tasks,
-            projects,
+            serviceRequests,
             upcomingMeetings,
           }),
         }),

@@ -13,10 +13,8 @@ import Portfolio from "@/components/households/detail/portfolio";
 import Opportunities from "@/components/households/detail/opportunities";
 import Engagement from "@/components/households/detail/engagement";
 import MeetingCard from "@/components/households/detail/meeting-card";
-import {
-  ProjectList,
-  TaskList,
-} from "@/components/households/detail/work-items";
+import { TaskList } from "@/components/households/detail/work-items";
+import RequestList from "@/components/service-requests/request-list";
 import ProfileSection from "./profile-section";
 import BalanceSheetTable from "./balance-sheet-table";
 import AssetComposition from "./asset-composition";
@@ -50,6 +48,7 @@ import {
   memberCount,
 } from "@/lib/households";
 import { openItems } from "@/lib/open-items";
+import { isOpen } from "@/lib/service-requests";
 import { useHydrated } from "@/lib/use-hydrated";
 import { cn } from "@/lib/utils";
 import { useHouseholdsStore } from "@/stores/households-store";
@@ -59,6 +58,7 @@ const TABS = [
   { value: "balance-sheet", label: "Balance sheet" },
   { value: "accounts", label: "Accounts & debts" },
   { value: "protection", label: "Protection & estate" },
+  { value: "requests", label: "Service requests" },
   { value: "planning", label: "Planning" },
   { value: "activity", label: "Activity" },
 ];
@@ -100,7 +100,8 @@ export default function HouseholdProfile({ id }: HouseholdProfileProps) {
 function HouseholdProfileView({ household }: { household: Household }) {
   const [tab, setTab] = useState("overview");
   const tasks = useHouseholdsStore((state) => state.tasks);
-  const projects = useHouseholdsStore((state) => state.projects);
+  const serviceRequests = useHouseholdsStore((state) => state.serviceRequests);
+  const openNewRequest = useHouseholdsStore((state) => state.openNewRequest);
   const upcomingMeetings = useHouseholdsStore(
     (state) => state.upcomingMeetings,
   );
@@ -114,7 +115,7 @@ function HouseholdProfileView({ household }: { household: Household }) {
 
   const financials = householdFinancials(household.id);
   const sheet = buildBalanceSheet(household);
-  const items = openItems(household, tasks, projects);
+  const items = openItems(household, tasks, serviceRequests);
   const advisor = advisorByName(household.advisor);
   const spouse = spouseOf(household);
   const head = household.people.find(
@@ -125,9 +126,12 @@ function HouseholdProfileView({ household }: { household: Household }) {
   const householdTasks = tasks.filter(
     (task) => task.householdId === household.id && task.status === "todo",
   );
-  const householdProjects = projects.filter(
-    (project) =>
-      project.householdId === household.id && project.status === "in_progress",
+  const householdRequests = serviceRequests
+    .filter((request) => request.householdId === household.id)
+    .sort((a, b) => b.openedOn.localeCompare(a.openedOn));
+  const openRequests = householdRequests.filter(isOpen);
+  const closedRequests = householdRequests.filter(
+    (request) => !isOpen(request),
   );
   const householdMeetings = upcomingMeetings
     .filter((meeting) => meeting.householdId === household.id)
@@ -418,6 +422,15 @@ function HouseholdProfileView({ household }: { household: Household }) {
                 <Button
                   variant="subtle"
                   size="sm"
+                  onClick={() => openNewRequest(household.id)}
+                >
+                  New request
+                </Button>
+              )}
+              {household.type !== "Past client" && (
+                <Button
+                  variant="subtle"
+                  size="sm"
                   onClick={() => logTouchpoint(household.id, "Call")}
                 >
                   Log call
@@ -476,6 +489,22 @@ function HouseholdProfileView({ household }: { household: Household }) {
                 </ProfileSection>
               </div>
               <div className="flex min-w-0 flex-col gap-4">
+                {openRequests.length > 0 && (
+                  <ProfileSection
+                    title={`Service requests · ${openRequests.length} open`}
+                    action={
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setTab("requests")}
+                      >
+                        View all
+                      </Button>
+                    }
+                  >
+                    <RequestList requests={openRequests} />
+                  </ProfileSection>
+                )}
                 <ProfileSection title="Household">
                   <HouseholdMembers
                     household={household}
@@ -740,21 +769,48 @@ function HouseholdProfileView({ household }: { household: Household }) {
                     </p>
                   )}
                 </ProfileSection>
-                <ProfileSection title="Active projects">
-                  {householdProjects.length > 0 ? (
-                    <ProjectList projects={householdProjects} />
+                <ProfileSection title="Open tasks">
+                  {householdTasks.length > 0 ? (
+                    <TaskList tasks={householdTasks} onToggle={toggleTask} />
                   ) : (
-                    <p className="caption-style text-subtle">
-                      No active projects.
-                    </p>
+                    <p className="caption-style text-subtle">No open tasks.</p>
                   )}
                 </ProfileSection>
               </div>
-              <ProfileSection title="Open tasks">
-                {householdTasks.length > 0 ? (
-                  <TaskList tasks={householdTasks} onToggle={toggleTask} />
+            </div>
+          )}
+
+          {tab === "requests" && (
+            <div className="grid gap-4 xl:grid-cols-2">
+              <ProfileSection
+                title={`Open · ${openRequests.length}`}
+                action={
+                  household.type !== "Past client" ? (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => openNewRequest(household.id)}
+                    >
+                      New request
+                    </Button>
+                  ) : undefined
+                }
+              >
+                {openRequests.length > 0 ? (
+                  <RequestList requests={openRequests} />
                 ) : (
-                  <p className="caption-style text-subtle">No open tasks.</p>
+                  <p className="caption-style text-subtle">
+                    No open service requests.
+                  </p>
+                )}
+              </ProfileSection>
+              <ProfileSection title={`Completed · ${closedRequests.length}`}>
+                {closedRequests.length > 0 ? (
+                  <RequestList requests={closedRequests} />
+                ) : (
+                  <p className="caption-style text-subtle">
+                    No completed requests yet.
+                  </p>
                 )}
               </ProfileSection>
             </div>

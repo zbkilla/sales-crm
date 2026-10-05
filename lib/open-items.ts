@@ -1,5 +1,6 @@
 import type { Household } from "@/data/households";
-import type { Project } from "@/data/projects";
+import type { ServiceRequest } from "@/data/service-requests";
+import { isOpen } from "@/lib/service-requests";
 import type { Task } from "@/data/tasks";
 import {
   accountCategory,
@@ -37,7 +38,7 @@ const STALE_DAYS = 365;
 export function openItems(
   household: Household,
   tasks: Task[],
-  projects: Project[],
+  serviceRequests: ServiceRequest[],
 ): OpenItem[] {
   const items: OpenItem[] = [];
   const financials = householdFinancials(household.id);
@@ -59,17 +60,24 @@ export function openItems(
     });
   }
 
-  for (const project of projects) {
-    if (
-      project.householdId === household.id &&
-      project.status === "in_progress" &&
-      project.dueDate < TODAY
-    ) {
+  for (const request of serviceRequests) {
+    if (request.householdId !== household.id || !isOpen(request)) continue;
+    if (request.status === "NIGO / Rework") {
+      const latest = request.nigoHistory[request.nigoHistory.length - 1];
       items.push({
-        id: `project-${project.id}`,
+        id: `nigo-${request.id}`,
         severity: "critical",
-        title: `Project past due: ${project.name}`,
-        detail: `Target was ${formatDate(project.dueDate)}.`,
+        title: `Request in NIGO: ${request.title}`,
+        detail: latest
+          ? `SR-${request.number} · ${latest.reason}. ${latest.note}`
+          : `SR-${request.number} needs rework.`,
+      });
+    } else if (request.dueOn < TODAY) {
+      items.push({
+        id: `sla-${request.id}`,
+        severity: "critical",
+        title: `Request past SLA: ${request.title}`,
+        detail: `SR-${request.number} was due ${formatDate(request.dueOn)}.`,
       });
     }
   }

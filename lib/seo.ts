@@ -59,10 +59,10 @@ export const SITE_ROUTES: SiteRoute[] = [
     priority: 0.7,
   },
   {
-    path: "/projects",
-    title: "Projects",
+    path: "/requests",
+    title: "Service requests",
     description:
-      "Client service projects such as onboarding, money movement, RMDs and reviews, tracked by milestone.",
+      "Standardized service request workflows with checklists, SLAs and NIGO tracking.",
     changeFrequency: "weekly",
     priority: 0.7,
   },

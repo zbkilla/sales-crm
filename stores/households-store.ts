@@ -18,7 +18,15 @@ import {
 } from "@/data/households";
 import { NOTIFICATIONS } from "@/data/notifications";
 import { TASKS, type Task } from "@/data/tasks";
-import { PROJECTS, PROJECT_TYPES, type Project } from "@/data/projects";
+import type { NigoReason, ServiceRequest } from "@/data/service-requests";
+import {
+  buildSeedRequests,
+  cancelRequest,
+  flagNigo,
+  resumeRequest,
+  toggleStep,
+  verifyRequest,
+} from "@/lib/service-requests";
 import { UPCOMING_MEETINGS, type ScheduledMeeting } from "@/data/meetings";
 import { DEFAULT_FILTERS, TODAY } from "@/lib/households";
 
@@ -27,7 +35,7 @@ export type ReviewsTab = "upcoming" | "touchpoints";
 export type PipelineTab = "prospect" | "client";
 export type OpportunityOutcome = "won" | "lost";
 export type TasksTab = "mine" | "all";
-export type ProjectsTab = "active" | "completed";
+export type RequestsTab = "queue" | "waiting" | "nigo" | "closed";
 export type MeetingsTab = "upcoming" | "past";
 
 export type ReviewsFilters = {
@@ -111,12 +119,26 @@ type HouseholdsState = {
   setTasksPriority: (priority: string) => void;
   toggleTask: (id: string) => void;
   addTask: (task: Task) => void;
-  projects: Project[];
-  projectsTab: ProjectsTab;
-  projectsType: string;
-  setProjectsTab: (tab: ProjectsTab) => void;
-  setProjectsType: (typeId: string) => void;
-  advanceMilestone: (id: string) => void;
+  serviceRequests: ServiceRequest[];
+  requestsTab: RequestsTab;
+  requestsCategory: string;
+  requestsOwner: string;
+  setRequestsTab: (tab: RequestsTab) => void;
+  setRequestsCategory: (category: string) => void;
+  setRequestsOwner: (owner: string) => void;
+  requestDetailId: string | null;
+  openRequest: (id: string) => void;
+  closeRequest: () => void;
+  newRequestOpen: boolean;
+  newRequestHouseholdId: string | null;
+  openNewRequest: (householdId?: string | null) => void;
+  setNewRequestOpen: (open: boolean) => void;
+  addServiceRequest: (request: ServiceRequest) => void;
+  toggleRequestStep: (id: string, index: number) => void;
+  markRequestNigo: (id: string, reason: NigoReason, note: string) => void;
+  resumeServiceRequest: (id: string) => void;
+  verifyServiceRequest: (id: string, verifier: string) => void;
+  cancelServiceRequest: (id: string) => void;
   upcomingMeetings: ScheduledMeeting[];
   meetingsTab: MeetingsTab;
   setMeetingsTab: (tab: MeetingsTab) => void;
@@ -155,7 +177,7 @@ function initialData() {
   return {
     households: HOUSEHOLDS,
     tasks: TASKS,
-    projects: PROJECTS,
+    serviceRequests: buildSeedRequests(),
     upcomingMeetings: UPCOMING_MEETINGS,
     unreadNotificationIds: NOTIFICATIONS.filter((item) => item.unread).map(
       (item) => item.id,
@@ -182,6 +204,16 @@ function updateHousehold(
 ) {
   return households.map((household) =>
     household.id === id ? update(household) : household,
+  );
+}
+
+function updateRequest(
+  requests: ServiceRequest[],
+  id: string,
+  update: (request: ServiceRequest) => ServiceRequest,
+) {
+  return requests.map((request) =>
+    request.id === id ? update(request) : request,
   );
 }
 
@@ -371,34 +403,64 @@ export const useHouseholdsStore = create<HouseholdsState>()(
           ),
         })),
       addTask: (task) => set((state) => ({ tasks: [task, ...state.tasks] })),
-      projectsTab: "active",
-      projectsType: "any",
-      setProjectsTab: (projectsTab) => set({ projectsTab }),
-      setProjectsType: (projectsType) => set({ projectsType }),
-      advanceMilestone: (id) =>
+      requestsTab: "queue",
+      requestsCategory: "any",
+      requestsOwner: "all",
+      setRequestsTab: (requestsTab) => set({ requestsTab }),
+      setRequestsCategory: (requestsCategory) => set({ requestsCategory }),
+      setRequestsOwner: (requestsOwner) => set({ requestsOwner }),
+      requestDetailId: null,
+      openRequest: (requestDetailId) =>
+        set({ requestDetailId, detailOpen: false, profileOpen: false }),
+      closeRequest: () => set({ requestDetailId: null }),
+      newRequestOpen: false,
+      newRequestHouseholdId: null,
+      openNewRequest: (householdId = null) =>
+        set({
+          newRequestOpen: true,
+          newRequestHouseholdId: householdId,
+          detailOpen: false,
+        }),
+      setNewRequestOpen: (newRequestOpen) => set({ newRequestOpen }),
+      addServiceRequest: (request) =>
         set((state) => ({
-          projects: state.projects.map((project) => {
-            if (project.id !== id || project.status !== "in_progress") {
-              return project;
-            }
-            const type = PROJECT_TYPES.find(
-              (item) => item.id === project.typeId,
-            );
-            const last = (type?.milestones.length ?? 1) - 1;
-            if (project.milestoneIndex >= last) {
-              return {
-                ...project,
-                milestoneProgress: 100,
-                status: "completed",
-                completedAt: TODAY,
-              };
-            }
-            return {
-              ...project,
-              milestoneIndex: project.milestoneIndex + 1,
-              milestoneProgress: 0,
-            };
-          }),
+          serviceRequests: [request, ...state.serviceRequests],
+          newRequestOpen: false,
+          requestDetailId: request.id,
+        })),
+      toggleRequestStep: (id, index) =>
+        set((state) => ({
+          serviceRequests: updateRequest(state.serviceRequests, id, (request) =>
+            toggleStep(request, index),
+          ),
+        })),
+      markRequestNigo: (id, reason, note) =>
+        set((state) => ({
+          serviceRequests: updateRequest(state.serviceRequests, id, (request) =>
+            flagNigo(request, reason, note),
+          ),
+        })),
+      resumeServiceRequest: (id) =>
+        set((state) => ({
+          serviceRequests: updateRequest(
+            state.serviceRequests,
+            id,
+            resumeRequest,
+          ),
+        })),
+      verifyServiceRequest: (id, verifier) =>
+        set((state) => ({
+          serviceRequests: updateRequest(state.serviceRequests, id, (request) =>
+            verifyRequest(request, verifier),
+          ),
+        })),
+      cancelServiceRequest: (id) =>
+        set((state) => ({
+          serviceRequests: updateRequest(
+            state.serviceRequests,
+            id,
+            cancelRequest,
+          ),
         })),
       meetingsTab: "upcoming",
       setMeetingsTab: (meetingsTab) => set({ meetingsTab }),
@@ -458,13 +520,14 @@ export const useHouseholdsStore = create<HouseholdsState>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 1,
+      version: 2,
+      migrate: () => initialData(),
       storage: createJSONStorage(() => safeStorage),
       skipHydration: true,
       partialize: (state) => ({
         households: state.households,
         tasks: state.tasks,
-        projects: state.projects,
+        serviceRequests: state.serviceRequests,
         upcomingMeetings: state.upcomingMeetings,
         unreadNotificationIds: state.unreadNotificationIds,
       }),

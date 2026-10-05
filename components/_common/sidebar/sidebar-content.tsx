@@ -7,6 +7,7 @@ import SidebarSection from "./sidebar-section";
 import { usePathname } from "next/navigation";
 import { CURRENT_USER } from "@/data/households";
 import { TODAY, reviewStatus } from "@/lib/households";
+import { isOpen } from "@/lib/service-requests";
 import { useHouseholdsStore } from "@/stores/households-store";
 import Logo from "@/public/assets/images/_common/logo.svg";
 import BuildingIcon from "@/public/assets/images/households/sidebar/building.svg";
@@ -41,7 +42,7 @@ export default function SidebarContent() {
   );
   const setPipelineTab = useHouseholdsStore((state) => state.setPipelineTab);
   const tasks = useHouseholdsStore((state) => state.tasks);
-  const projects = useHouseholdsStore((state) => state.projects);
+  const serviceRequests = useHouseholdsStore((state) => state.serviceRequests);
   const upcomingMeetings = useHouseholdsStore(
     (state) => state.upcomingMeetings,
   );
@@ -66,9 +67,7 @@ export default function SidebarContent() {
       task.due !== null &&
       task.due <= TODAY,
   ).length;
-  const activeProjects = projects.filter(
-    (project) => project.status === "in_progress",
-  ).length;
+  const openRequests = serviceRequests.filter(isOpen).length;
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -112,10 +111,10 @@ export default function SidebarContent() {
             />
             <SidebarNavItem
               icon={ListIcon}
-              label="Projects"
-              count={activeProjects}
-              href="/projects"
-              active={pathname === "/projects"}
+              label="Service requests"
+              count={openRequests}
+              href="/requests"
+              active={pathname === "/requests"}
               onClick={navigate()}
             />
             <SidebarNavItem

@@ -1,6 +1,8 @@
 import type { Household } from "@/data/households";
 import type { ScheduledMeeting } from "@/data/meetings";
-import { PROJECT_TYPES, type Project } from "@/data/projects";
+import { requestTemplate } from "@/data/request-templates";
+import type { ServiceRequest } from "@/data/service-requests";
+import { currentStep, isOpen } from "@/lib/service-requests";
 import type { Task } from "@/data/tasks";
 import { ASSET_CATEGORIES } from "@/data/financials";
 import {
@@ -24,7 +26,7 @@ import {
 type BookSource = {
   households: Household[];
   tasks: Task[];
-  projects: Project[];
+  serviceRequests: ServiceRequest[];
   upcomingMeetings: ScheduledMeeting[];
 };
 
@@ -98,7 +100,7 @@ function financialSnapshot(household: Household) {
 function householdSnapshot(
   household: Household,
   tasks: Task[],
-  projects: Project[],
+  serviceRequests: ServiceRequest[],
 ) {
   return {
     id: household.id,
@@ -154,7 +156,7 @@ function householdSnapshot(
     })),
     weightedPipeline: weightedPipeline(household),
     financials: financialSnapshot(household),
-    openItems: openItems(household, tasks, projects).map(
+    openItems: openItems(household, tasks, serviceRequests).map(
       (item) => `${item.severity}: ${item.title}`,
     ),
     recentMeetings: household.meetings.map((meeting) => ({
@@ -170,7 +172,7 @@ function householdSnapshot(
 export function buildBookSnapshot({
   households,
   tasks,
-  projects,
+  serviceRequests,
   upcomingMeetings,
 }: BookSource) {
   const nameOf = (id: string | null) =>
@@ -179,7 +181,7 @@ export function buildBookSnapshot({
   return {
     today: TODAY,
     households: households.map((household) =>
-      householdSnapshot(household, tasks, projects),
+      householdSnapshot(household, tasks, serviceRequests),
     ),
     openTasks: tasks
       .filter((task) => task.status === "todo")
@@ -190,19 +192,26 @@ export function buildBookSnapshot({
         due: task.due,
         priority: task.priority,
       })),
-    activeProjects: projects
-      .filter((project) => project.status === "in_progress")
-      .map((project) => {
-        const type = PROJECT_TYPES.find((item) => item.id === project.typeId);
-        return {
-          name: project.name,
-          type: type?.name ?? project.typeId,
-          household: nameOf(project.householdId),
-          assignee: project.assignee,
-          currentMilestone: type?.milestones[project.milestoneIndex] ?? null,
-          dueDate: project.dueDate,
-        };
-      }),
+    openServiceRequests: serviceRequests.filter(isOpen).map((request) => {
+      const template = requestTemplate(request.templateKey);
+      const step = currentStep(request);
+      return {
+        number: `SR-${request.number}`,
+        title: request.title,
+        type: template?.name ?? request.templateKey,
+        category: template?.category ?? null,
+        household: nameOf(request.householdId),
+        status: request.status,
+        currentStep: step ? `${step.step.name} (${step.step.role})` : null,
+        owner: request.owner,
+        amount: request.amount,
+        openedOn: request.openedOn,
+        dueOn: request.dueOn,
+        nigo: request.nigoHistory.map(
+          (event) => `${event.date}: ${event.reason}`,
+        ),
+      };
+    }),
     upcomingMeetings: upcomingMeetings.map((meeting) => ({
       title: meeting.title,
       type: meeting.type,

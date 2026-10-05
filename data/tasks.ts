@@ -17,7 +17,11 @@ export const PRIORITY_LABELS: Record<TaskPriority, string> = {
   low: "Low",
 };
 
-export type TaskSource = "Manual" | "Meeting" | "Automation" | "Project";
+export type TaskSource =
+  | "Manual"
+  | "Meeting"
+  | "Automation"
+  | "Service request";
 
 export type Task = {
   id: string;
@@ -29,7 +33,7 @@ export type Task = {
   status: "todo" | "done";
   completedAt?: string;
   source: TaskSource;
-  projectId?: string;
+  requestId?: string;
 };
 
 export const TASKS: Task[] = [
@@ -41,8 +45,8 @@ export const TASKS: Task[] = [
     due: "2026-10-02",
     priority: "urgent",
     status: "todo",
-    source: "Project",
-    projectId: "p-hartwell-rmd",
+    source: "Service request",
+    requestId: "sr-hartwell-rmd",
   },
   {
     id: "t2",
@@ -66,7 +70,8 @@ export const TASKS: Task[] = [
   },
   {
     id: "t4",
-    title: "Call Aaron Feldman about the Schwab rollover IRA transfer-out alert",
+    title:
+      "Call Aaron Feldman about the Schwab rollover IRA transfer-out alert",
     householdId: "feldman",
     assignee: "Morgan Hale",
     due: "2026-10-05",
@@ -132,8 +137,8 @@ export const TASKS: Task[] = [
     due: "2026-10-14",
     priority: "medium",
     status: "todo",
-    source: "Project",
-    projectId: "p-coleman-roth",
+    source: "Service request",
+    requestId: "sr-coleman-roth",
   },
   {
     id: "t11",
@@ -185,7 +190,7 @@ export const TASKS: Task[] = [
     priority: "high",
     status: "done",
     completedAt: "2026-09-18",
-    source: "Project",
-    projectId: "p-whitaker-rmd",
+    source: "Service request",
+    requestId: "sr-whitaker-qcd",
   },
 ];

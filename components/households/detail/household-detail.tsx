@@ -21,7 +21,9 @@ import Portfolio from "./portfolio";
 import Opportunities from "./opportunities";
 import Engagement from "./engagement";
 import MeetingCard from "./meeting-card";
-import { ProjectList, TaskList } from "./work-items";
+import { TaskList } from "./work-items";
+import RequestList from "@/components/service-requests/request-list";
+import { isOpen } from "@/lib/service-requests";
 import { TREND_WINDOWS, type Household } from "@/data/households";
 import { useHouseholdsStore } from "@/stores/households-store";
 import BuildingIcon from "@/public/assets/images/households/detail/building.svg";
@@ -52,7 +54,7 @@ export default function HouseholdDetail() {
   const logReview = useHouseholdsStore((state) => state.logReview);
   const logTouchpoint = useHouseholdsStore((state) => state.logTouchpoint);
   const tasks = useHouseholdsStore((state) => state.tasks);
-  const projects = useHouseholdsStore((state) => state.projects);
+  const serviceRequests = useHouseholdsStore((state) => state.serviceRequests);
   const toggleTask = useHouseholdsStore((state) => state.toggleTask);
   const [trendWindow, setTrendWindow] = useState(TREND_WINDOWS[1]);
 
@@ -60,9 +62,8 @@ export default function HouseholdDetail() {
   const openTasks = tasks.filter(
     (task) => task.householdId === detailId && task.status === "todo",
   );
-  const activeProjects = projects.filter(
-    (project) =>
-      project.householdId === detailId && project.status === "in_progress",
+  const openRequests = serviceRequests.filter(
+    (request) => request.householdId === detailId && isOpen(request),
   );
 
   function runPrimary() {
@@ -158,9 +159,9 @@ export default function HouseholdDetail() {
               </DetailSection>
             )}
 
-            {activeProjects.length > 0 && (
-              <DetailSection title="Active projects">
-                <ProjectList projects={activeProjects} />
+            {openRequests.length > 0 && (
+              <DetailSection title="Service requests">
+                <RequestList requests={openRequests} />
               </DetailSection>
             )}
 
