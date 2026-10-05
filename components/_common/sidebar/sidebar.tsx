@@ -8,11 +8,11 @@ import {
 } from "@/components/_ui/sheet";
 import SidebarContent from "./sidebar-content";
 import SidebarResizer from "./sidebar-resizer";
-import { useCompaniesStore } from "@/stores/companies-store";
+import { useHouseholdsStore } from "@/stores/households-store";
 
 export default function Sidebar() {
-  const sidebarOpen = useCompaniesStore((state) => state.sidebarOpen);
-  const setSidebarOpen = useCompaniesStore((state) => state.setSidebarOpen);
+  const sidebarOpen = useHouseholdsStore((state) => state.sidebarOpen);
+  const setSidebarOpen = useHouseholdsStore((state) => state.setSidebarOpen);
 
   return (
     <>
@@ -28,7 +28,7 @@ export default function Sidebar() {
         >
           <SheetTitle className="sr-only">Navigation</SheetTitle>
           <SheetDescription className="sr-only">
-            Sales CRM sections and pipelines
+            RIA AgentOS sections, reports and pipelines
           </SheetDescription>
           <SidebarContent />
         </SheetContent>

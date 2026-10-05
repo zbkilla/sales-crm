@@ -1,4 +1,4 @@
-import { TREND_PATTERN } from "@/data/companies";
+import { TREND_PATTERN } from "@/data/households";
 import { cn } from "@/lib/utils";
 
 type SparklineProps = {

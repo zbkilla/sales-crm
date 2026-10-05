@@ -4,30 +4,33 @@ import Button from "@/components/_ui/button";
 import { ScrollArea } from "@/components/_ui/scroll-area";
 import SidebarNavItem from "./sidebar-nav-item";
 import SidebarSection from "./sidebar-section";
-import { useCompaniesStore } from "@/stores/companies-store";
+import { reviewStatus } from "@/lib/households";
+import { useHouseholdsStore } from "@/stores/households-store";
 import Logo from "@/public/assets/images/_common/logo.svg";
-import BuildingIcon from "@/public/assets/images/companies/sidebar/building.svg";
-import ClipboardIcon from "@/public/assets/images/companies/sidebar/clipboard.svg";
-import BarChartIcon from "@/public/assets/images/companies/sidebar/bar-chart.svg";
-import ListIcon from "@/public/assets/images/companies/sidebar/list.svg";
-import BookClosedIcon from "@/public/assets/images/companies/sidebar/book-closed.svg";
-import MailIcon from "@/public/assets/images/companies/sidebar/mail.svg";
-import TargetIcon from "@/public/assets/images/companies/sidebar/target-05.svg";
-import TargetAltIcon from "@/public/assets/images/companies/sidebar/target-03.svg";
-import UsersIcon from "@/public/assets/images/companies/sidebar/users.svg";
-import BarChartAltIcon from "@/public/assets/images/companies/sidebar/bar-chart-10.svg";
-import AlertTriangleIcon from "@/public/assets/images/companies/sidebar/alert-triangle.svg";
-import DotYellow from "@/public/assets/images/companies/sidebar/dot-yellow.svg";
-import DotPink from "@/public/assets/images/companies/sidebar/dot-pink.svg";
-import DotPurple from "@/public/assets/images/companies/sidebar/dot-purple.svg";
-import UserPlusIcon from "@/public/assets/images/companies/sidebar/user-plus.svg";
-import MessageQuestionIcon from "@/public/assets/images/companies/sidebar/message-question.svg";
-import WalletIcon from "@/public/assets/images/companies/sidebar/wallet.svg";
-
-const BASE_COMPANY_COUNT = 223;
+import BuildingIcon from "@/public/assets/images/households/sidebar/building.svg";
+import CalendarCheckIcon from "@/public/assets/images/households/detail/calendar.svg";
+import ClipboardIcon from "@/public/assets/images/households/sidebar/clipboard.svg";
+import BarChartIcon from "@/public/assets/images/households/sidebar/bar-chart.svg";
+import ListIcon from "@/public/assets/images/households/sidebar/list.svg";
+import BookClosedIcon from "@/public/assets/images/households/sidebar/book-closed.svg";
+import MailIcon from "@/public/assets/images/households/sidebar/mail.svg";
+import TargetIcon from "@/public/assets/images/households/sidebar/target-05.svg";
+import TargetAltIcon from "@/public/assets/images/households/sidebar/target-03.svg";
+import UsersIcon from "@/public/assets/images/households/sidebar/users.svg";
+import BarChartAltIcon from "@/public/assets/images/households/sidebar/bar-chart-10.svg";
+import AlertTriangleIcon from "@/public/assets/images/households/sidebar/alert-triangle.svg";
+import DotYellow from "@/public/assets/images/households/sidebar/dot-yellow.svg";
+import DotPink from "@/public/assets/images/households/sidebar/dot-pink.svg";
+import DotPurple from "@/public/assets/images/households/sidebar/dot-purple.svg";
+import UserPlusIcon from "@/public/assets/images/households/sidebar/user-plus.svg";
+import MessageQuestionIcon from "@/public/assets/images/households/sidebar/message-question.svg";
+import WalletIcon from "@/public/assets/images/households/sidebar/wallet.svg";
 
 export default function SidebarContent() {
-  const companyCount = useCompaniesStore((state) => state.companies.length);
+  const households = useHouseholdsStore((state) => state.households);
+  const reviewsDue = households.filter(
+    (household) => reviewStatus(household) === "overdue",
+  ).length;
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -35,10 +38,10 @@ export default function SidebarContent() {
         <Logo aria-hidden className="size-8 shrink-0 overflow-visible" />
         <div className="flex min-w-0 flex-col gap-1">
           <span className="lead-style block truncate font-medium tracking-[-0.01em]">
-            Sales CRM
+            RIA AgentOS
           </span>
           <span className="caption-style text-subtle block truncate">
-            Company pipeline
+            Household book
           </span>
         </div>
       </div>
@@ -48,38 +51,41 @@ export default function SidebarContent() {
           <SidebarSection className="border-sidebar-border border-b">
             <SidebarNavItem
               icon={BuildingIcon}
-              label="Companies"
-              count={BASE_COMPANY_COUNT + companyCount}
+              label="Households"
+              count={households.length}
               active
             />
-            <SidebarNavItem icon={ClipboardIcon} label="Deals Board" />
-            <SidebarNavItem icon={BarChartIcon} label="Forecast" count={9} />
-            <SidebarNavItem icon={ListIcon} label="Activities" />
-            <SidebarNavItem icon={BookClosedIcon} label="Contacts" count={38} />
-            <SidebarNavItem icon={MailIcon} label="Email Sequences" />
+            <SidebarNavItem icon={CalendarCheckIcon} label="Reviews" count={reviewsDue} />
+            <SidebarNavItem icon={ClipboardIcon} label="Opportunities" />
+            <SidebarNavItem icon={ListIcon} label="Projects" count={7} />
+            <SidebarNavItem icon={BarChartIcon} label="Meetings" />
+            <SidebarNavItem icon={TargetIcon} label="Tasks" count={12} />
+            <SidebarNavItem icon={BookClosedIcon} label="Other contacts" />
+            <SidebarNavItem icon={MailIcon} label="Sequences" />
           </SidebarSection>
 
           <SidebarSection
             title="Team"
             className="border-sidebar-border border-b"
           >
-            <SidebarNavItem icon={TargetIcon} label="Strategic AEs" />
-            <SidebarNavItem icon={TargetAltIcon} label="Mid Market" />
-            <SidebarNavItem icon={UsersIcon} label="SDR Team" />
+            <SidebarNavItem icon={TargetAltIcon} label="Lead advisors" />
+            <SidebarNavItem icon={UsersIcon} label="Service team" />
+            <SidebarNavItem icon={UsersIcon} label="Operations" />
           </SidebarSection>
 
           <SidebarSection
-            title="Reporting"
+            title="Reports"
             className="border-sidebar-border border-b"
           >
-            <SidebarNavItem icon={BarChartAltIcon} label="Q1 Forecast" />
-            <SidebarNavItem icon={AlertTriangleIcon} label="Slipping Deals" />
+            <SidebarNavItem icon={AlertTriangleIcon} label="Reviews overdue" />
+            <SidebarNavItem icon={BarChartAltIcon} label="Clients over $1M" />
+            <SidebarNavItem icon={BarChartAltIcon} label="Upcoming birthdays" />
           </SidebarSection>
 
           <SidebarSection title="Pipelines">
-            <SidebarNavItem icon={DotYellow} label="North America" />
-            <SidebarNavItem icon={DotPink} label="EMEA Enterprise" />
-            <SidebarNavItem icon={DotPurple} label="APAC Expansion" />
+            <SidebarNavItem icon={DotYellow} label="Prospect pipeline" />
+            <SidebarNavItem icon={DotPink} label="Client growth" />
+            <SidebarNavItem icon={DotPurple} label="Rollovers" />
           </SidebarSection>
         </nav>
       </ScrollArea>
