@@ -24,13 +24,17 @@ export default function OpenItemsList({ items }: OpenItemsListProps) {
   }
 
   return (
-    <ul className="divide-line-strong flex flex-col divide-y">
+    <ul className="divide-line-strong grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4 divide-y">
       {items.map((item) => (
         <li
           key={item.id}
-          className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0"
+          className="col-span-2 grid grid-cols-subgrid items-start py-2.5 first:pt-0 last:pb-0"
         >
-          <Tag tone={SEVERITY[item.severity].tone} size="sm" className="mt-px">
+          <Tag
+            tone={SEVERITY[item.severity].tone}
+            size="sm"
+            className="mt-px justify-self-start"
+          >
             {SEVERITY[item.severity].label}
           </Tag>
           <span className="flex min-w-0 flex-col gap-0.5">
