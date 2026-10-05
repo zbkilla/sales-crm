@@ -7,8 +7,10 @@ export const TABLE_COLUMN_KEYS = [
   "assets",
   "pipeline",
   "followUp",
+  "reviewStatus",
   "trend",
   "lastTouchpoint",
+  "touchpointType",
   "action",
 ] as const;
 
@@ -21,12 +23,17 @@ const COLUMN_CLASS: Record<TableColumnKey, string> = {
   assets: "justify-end tabular-nums",
   pipeline: "justify-end tabular-nums",
   followUp: "justify-start",
+  reviewStatus: "justify-start",
   trend: "justify-center",
   lastTouchpoint: "justify-start",
+  touchpointType: "justify-start",
   action: "justify-center",
 };
 
-const COLUMN_LABELS: Record<HouseholdTab, Record<TableColumnKey, string>> = {
+const COLUMN_LABELS: Record<
+  HouseholdTab,
+  Partial<Record<TableColumnKey, string>>
+> = {
   clients: {
     name: "Household",
     segment: "Tier & Tags",
@@ -34,8 +41,10 @@ const COLUMN_LABELS: Record<HouseholdTab, Record<TableColumnKey, string>> = {
     assets: "AUM",
     pipeline: "Pipeline",
     followUp: "Next Review",
+    reviewStatus: "Review Status",
     trend: "Touchpoints",
     lastTouchpoint: "Last Touchpoint",
+    touchpointType: "Touchpoint Type",
     action: "Action",
   },
   prospects: {
@@ -47,6 +56,7 @@ const COLUMN_LABELS: Record<HouseholdTab, Record<TableColumnKey, string>> = {
     followUp: "Stage",
     trend: "Touchpoints",
     lastTouchpoint: "Last Touchpoint",
+    touchpointType: "Touchpoint Type",
     action: "Action",
   },
   past: {
@@ -58,20 +68,20 @@ const COLUMN_LABELS: Record<HouseholdTab, Record<TableColumnKey, string>> = {
     followUp: "Past Client Since",
     trend: "Touchpoints",
     lastTouchpoint: "Last Touchpoint",
+    touchpointType: "Touchpoint Type",
     action: "Action",
   },
 };
 
 export function columnsFor(tab: HouseholdTab) {
-  return TABLE_COLUMN_KEYS.map((key) => ({
-    key,
-    label: COLUMN_LABELS[tab][key],
-    className: COLUMN_CLASS[key],
-  }));
+  return TABLE_COLUMN_KEYS.flatMap((key) => {
+    const label = COLUMN_LABELS[tab][key];
+    return label ? [{ key, label, className: COLUMN_CLASS[key] }] : [];
+  });
 }
 
 export const TABLE_GRID_CLASS =
-  "grid min-w-max grid-cols-[repeat(9,max-content)] justify-between";
+  "grid min-w-max grid-cols-[repeat(var(--table-columns),max-content)] justify-between";
 
 export const TABLE_ROW_CLASS = "col-span-full grid grid-cols-subgrid";
 

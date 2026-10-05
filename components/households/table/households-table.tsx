@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, type CSSProperties } from "react";
 import { Checkbox } from "@/components/_ui/checkbox";
 import { ScrollArea } from "@/components/_ui/scroll-area";
 import {
@@ -62,7 +62,11 @@ export default function HouseholdsTable() {
   return (
     <div className="border-border flex min-h-0 flex-1 flex-col border-t">
       <ScrollArea orientation="both" className="min-h-0 flex-1">
-        <Table role="table" className={cn(TABLE_GRID_CLASS, "w-full")}>
+        <Table
+          role="table"
+          className={cn(TABLE_GRID_CLASS, "w-full")}
+          style={{ "--table-columns": columns.length } as CSSProperties}
+        >
           <TableHeader role="rowgroup" className="contents">
             <TableRow role="row" className={TABLE_ROW_CLASS}>
               {columns.map((column) => (
@@ -98,6 +102,7 @@ export default function HouseholdsTable() {
               <HouseholdRow
                 key={household.id}
                 household={household}
+                columns={columns.map((column) => column.key)}
                 selected={selectedIds.includes(household.id)}
                 active={detailOpen && detailId === household.id}
                 onToggle={() => toggleSelected(household.id)}

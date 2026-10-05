@@ -32,6 +32,7 @@ import DotsIcon from "@/public/assets/images/households/table/dots-horizontal.sv
 
 type HouseholdRowProps = {
   household: Household;
+  columns: TableColumnKey[];
   selected: boolean;
   active: boolean;
   onToggle: () => void;
@@ -74,12 +75,10 @@ function AssetsCell({ household }: { household: Household }) {
 function FollowUpCell({ household }: { household: Household }) {
   if (household.type === "Client") {
     const due = nextReviewDue(household);
-    const status = reviewStatus(household);
-    return (
-      <span className="flex items-center gap-2">
-        <span className="tabular-nums">{due ? formatDate(due) : "—"}</span>
-        {status && <FollowUpTag status={status} />}
-      </span>
+    return due ? (
+      <span className="tabular-nums">{formatDate(due)}</span>
+    ) : (
+      <span className="text-subtle">—</span>
     );
   }
   if (household.type === "Prospect") {
@@ -96,7 +95,9 @@ function FollowUpCell({ household }: { household: Household }) {
     );
   }
   return household.pastClientSince ? (
-    <span className="tabular-nums">{formatDate(household.pastClientSince)}</span>
+    <span className="tabular-nums">
+      {formatDate(household.pastClientSince)}
+    </span>
   ) : (
     <span className="text-subtle">—</span>
   );
@@ -104,6 +105,7 @@ function FollowUpCell({ household }: { household: Household }) {
 
 export default function HouseholdRow({
   household,
+  columns,
   selected,
   active,
   onToggle,
@@ -112,6 +114,7 @@ export default function HouseholdRow({
 }: HouseholdRowProps) {
   const advisor = advisorByName(household.advisor);
   const members = memberCount(household);
+  const status = reviewStatus(household);
 
   return (
     <TableRow
@@ -171,6 +174,15 @@ export default function HouseholdRow({
       <TableCell role="cell" className={cellClass("followUp")}>
         <FollowUpCell household={household} />
       </TableCell>
+      {columns.includes("reviewStatus") && (
+        <TableCell role="cell" className={cellClass("reviewStatus")}>
+          {status ? (
+            <FollowUpTag status={status} />
+          ) : (
+            <span className="text-subtle">—</span>
+          )}
+        </TableCell>
+      )}
       <TableCell role="cell" className={cellClass("trend")}>
         <Sparkline values={household.touchpointTrend} />
       </TableCell>
@@ -183,10 +195,13 @@ export default function HouseholdRow({
           <span className="tabular-nums">
             {formatDate(household.lastTouchpoint.date)}
           </span>
-          <span aria-hidden className="mx-[3px] h-2 w-px bg-white/15" />
-          {household.lastTouchpoint.label}
         </span>
       </TableCell>
+      {columns.includes("touchpointType") && (
+        <TableCell role="cell" className={cellClass("touchpointType")}>
+          {household.lastTouchpoint.label}
+        </TableCell>
+      )}
       <TableCell role="cell" className={cellClass("action")} onClick={stop}>
         <Button
           variant="ghost"
