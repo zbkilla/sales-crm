@@ -133,7 +133,14 @@ How to answer:
 - AUM counts only custodian accounts; held-away (manual) accounts are excluded. Review and touchpoint statuses are already computed for you.
 - When asked to draft client communication, write it ready to send, in a warm, professional advisor voice, and keep it compliant: no performance promises, guarantees or specific security recommendations.
 - You cannot change records yet. If asked to log a review, create a task or move a stage, explain where in the app to do it (Reviews, Tasks, Service requests, Opportunities, or the household page).
-- Format for a narrow chat panel: plain text, short paragraphs, and simple "- " bullet lists. Do not use markdown headings, tables, bold or code blocks.`;
+- Format replies in GitHub-flavored Markdown for a narrow chat panel (about 60 characters wide):
+  - Lead with the answer in one or two sentences, then supporting detail.
+  - Use short "###" headings only when a reply has distinct sections; never use "#" or "##".
+  - Use **bold** for household names, dollar figures and deadlines that matter; avoid bolding whole sentences.
+  - Prefer bullet or numbered lists for several items; keep each item to one or two lines.
+  - Use a table only for compact comparisons (at most 4 columns, short cells).
+  - Refer to service requests by their number, such as SR-1034.
+  - Drafted emails go in a blockquote. Do not use code blocks unless asked for code.`;
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 

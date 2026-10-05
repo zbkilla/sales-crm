@@ -18,6 +18,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/_ui/sheet";
+import MarkdownMessage from "./markdown-message";
 import { buildBookSnapshot } from "@/lib/book-snapshot";
 import { cn } from "@/lib/utils";
 import { useHouseholdsStore } from "@/stores/households-store";
@@ -249,21 +250,35 @@ export default function AssistantSheet() {
                     message.role === "user" ? "justify-end" : "justify-start",
                   )}
                 >
-                  <p
-                    className={cn(
-                      "max-w-[90%] rounded-xl px-3.5 py-2.5 whitespace-pre-wrap",
-                      message.role === "user"
-                        ? "bg-muted text-foreground"
-                        : "text-foreground",
-                      message.error &&
-                        "border-danger/40 text-danger border bg-transparent",
-                    )}
-                  >
-                    {message.content ||
-                      (pending && index === messages.length - 1 ? (
-                        <span className="text-subtle">Reading your book…</span>
-                      ) : null)}
-                  </p>
+                  {message.role === "assistant" &&
+                  !message.error &&
+                  message.content ? (
+                    <div
+                      data-role="assistant"
+                      className="w-full min-w-0 px-1 py-1"
+                    >
+                      <MarkdownMessage content={message.content} />
+                    </div>
+                  ) : (
+                    <p
+                      data-role={message.role}
+                      className={cn(
+                        "max-w-[90%] rounded-xl px-3.5 py-2.5 leading-[1.5] whitespace-pre-wrap",
+                        message.role === "user"
+                          ? "bg-muted text-foreground"
+                          : "text-foreground",
+                        message.error &&
+                          "border-danger/40 text-danger border bg-transparent",
+                      )}
+                    >
+                      {message.content ||
+                        (pending && index === messages.length - 1 ? (
+                          <span className="text-subtle">
+                            Reading your book…
+                          </span>
+                        ) : null)}
+                    </p>
+                  )}
                 </div>
               ))
             )}
