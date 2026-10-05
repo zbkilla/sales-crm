@@ -5,30 +5,85 @@ const MODEL = "claude-opus-5-5";
 const MAX_MESSAGES = 40;
 const MAX_MESSAGE_CHARS = 8000;
 const MAX_BOOK_CHARS = 400_000;
+const MAX_BODY_BYTES = 512_000;
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
-const RATE_LIMIT_MAX_REQUESTS = 20;
+const PER_CLIENT_MAX_REQUESTS = 20;
+const GLOBAL_MAX_REQUESTS = 60;
+const MAX_TRACKED_CLIENTS = 2000;
+const GLOBAL_KEY = "__global__";
 
 const requestLog = new Map<string, number[]>();
 
-function rateLimited(key: string) {
-  const now = Date.now();
-  const recent = (requestLog.get(key) ?? []).filter(
+function recentRequests(key: string, now: number) {
+  return (requestLog.get(key) ?? []).filter(
     (time) => now - time < RATE_LIMIT_WINDOW_MS,
   );
-  if (recent.length >= RATE_LIMIT_MAX_REQUESTS) {
-    requestLog.set(key, recent);
-    return true;
-  }
-  recent.push(now);
-  requestLog.set(key, recent);
-  if (requestLog.size > 1000) {
-    for (const [entry, times] of requestLog) {
-      if (times.every((time) => now - time >= RATE_LIMIT_WINDOW_MS)) {
-        requestLog.delete(entry);
-      }
+}
+
+function pruneRequestLog(now: number) {
+  for (const [key, times] of requestLog) {
+    if (times.every((time) => now - time >= RATE_LIMIT_WINDOW_MS)) {
+      requestLog.delete(key);
     }
   }
+}
+
+function rateLimited(clientKey: string | null) {
+  const now = Date.now();
+  const global = recentRequests(GLOBAL_KEY, now);
+  if (global.length >= GLOBAL_MAX_REQUESTS) return true;
+
+  if (clientKey) {
+    if (!requestLog.has(clientKey) && requestLog.size >= MAX_TRACKED_CLIENTS) {
+      pruneRequestLog(now);
+      if (requestLog.size >= MAX_TRACKED_CLIENTS) return true;
+    }
+    const client = recentRequests(clientKey, now);
+    if (client.length >= PER_CLIENT_MAX_REQUESTS) {
+      requestLog.set(clientKey, client);
+      return true;
+    }
+    requestLog.set(clientKey, [...client, now]);
+  }
+
+  requestLog.set(GLOBAL_KEY, [...global, now]);
   return false;
+}
+
+function trustedClientKey(request: Request) {
+  if (process.env.TRUST_PROXY !== "true") return null;
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    null
+  );
+}
+
+async function readLimitedBody(request: Request) {
+  const declared = Number(request.headers.get("content-length") ?? "0");
+  if (declared > MAX_BODY_BYTES) return null;
+  if (!request.body) return "";
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let received = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    received += value.byteLength;
+    if (received > MAX_BODY_BYTES) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  const body = new Uint8Array(received);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder().decode(body);
 }
 
 function assistantEnabled() {
@@ -125,11 +180,7 @@ export async function POST(request: Request) {
     return jsonError(403, "forbidden", "Requests must come from this app.");
   }
 
-  const clientKey =
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip") ||
-    "local";
-  if (rateLimited(clientKey)) {
+  if (rateLimited(trustedClientKey(request))) {
     return jsonError(
       429,
       "rate_limited",
@@ -137,9 +188,14 @@ export async function POST(request: Request) {
     );
   }
 
+  const rawBody = await readLimitedBody(request);
+  if (rawBody === null) {
+    return jsonError(413, "body_too_large", "The request is too large.");
+  }
+
   let payload: unknown;
   try {
-    payload = await request.json();
+    payload = JSON.parse(rawBody);
   } catch {
     return jsonError(400, "invalid_json", "Request body must be JSON.");
   }
