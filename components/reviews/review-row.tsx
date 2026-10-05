@@ -136,21 +136,30 @@ export default function ReviewRow({
                 : "None logged"}
             </span>
           ) : (
-            <>
-              <span className="tabular-nums">
-                {formatDate(household.lastTouchpoint.date)}
-              </span>
-              <span aria-hidden className="mx-[3px] h-2 w-px bg-white/15" />
-              {household.lastTouchpoint.label}
-            </>
+            <span className="tabular-nums">
+              {formatDate(household.lastTouchpoint.date)}
+            </span>
           )}
         </span>
       </TableCell>
+      {tab === "touchpoints" && (
+        <TableCell role="cell" className={cellClass("lastType")}>
+          {household.lastTouchpoint.label}
+        </TableCell>
+      )}
       <TableCell role="cell" className={cellClass("due")}>
-        <span className="flex items-center gap-2">
-          <span className="tabular-nums">{due ? formatDate(due) : "—"}</span>
-          {status && <FollowUpTag status={status} />}
-        </span>
+        {due ? (
+          <span className="tabular-nums">{formatDate(due)}</span>
+        ) : (
+          <span className="text-subtle">—</span>
+        )}
+      </TableCell>
+      <TableCell role="cell" className={cellClass("status")}>
+        {status ? (
+          <FollowUpTag status={status} />
+        ) : (
+          <span className="text-subtle">—</span>
+        )}
       </TableCell>
       <TableCell
         role="cell"

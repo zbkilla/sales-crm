@@ -5,7 +5,9 @@ export type ReviewColumnKey =
   | "tier"
   | "advisor"
   | "last"
+  | "lastType"
   | "due"
+  | "status"
   | "cadence"
   | "extra"
   | "action";
@@ -15,19 +17,22 @@ const COLUMN_CLASS: Record<ReviewColumnKey, string> = {
   tier: "justify-start",
   advisor: "justify-start",
   last: "justify-start",
+  lastType: "justify-start",
   due: "justify-start",
+  status: "justify-start",
   cadence: "justify-start",
   extra: "justify-end tabular-nums",
   action: "justify-end",
 };
 
-const LABELS: Record<ReviewsTab, Record<ReviewColumnKey, string>> = {
+const LABELS: Record<ReviewsTab, Partial<Record<ReviewColumnKey, string>>> = {
   upcoming: {
     client: "Client",
     tier: "Tier",
     advisor: "Advisor",
     last: "Last Review",
     due: "Next Review Due",
+    status: "Review Status",
     cadence: "Review Cadence",
     extra: "AUM",
     action: "Action",
@@ -37,7 +42,9 @@ const LABELS: Record<ReviewsTab, Record<ReviewColumnKey, string>> = {
     tier: "Tier",
     advisor: "Advisor",
     last: "Last Touchpoint",
+    lastType: "Touchpoint Type",
     due: "Next Touchpoint Due",
+    status: "Touchpoint Status",
     cadence: "Touchpoint Cadence",
     extra: "Email",
     action: "Action",
@@ -49,18 +56,19 @@ const KEYS: ReviewColumnKey[] = [
   "tier",
   "advisor",
   "last",
+  "lastType",
   "due",
+  "status",
   "cadence",
   "extra",
   "action",
 ];
 
 export function reviewColumns(tab: ReviewsTab) {
-  return KEYS.map((key) => ({
-    key,
-    label: LABELS[tab][key],
-    className: COLUMN_CLASS[key],
-  }));
+  return KEYS.flatMap((key) => {
+    const label = LABELS[tab][key];
+    return label ? [{ key, label, className: COLUMN_CLASS[key] }] : [];
+  });
 }
 
 export function reviewColumnClass(key: ReviewColumnKey) {
@@ -68,7 +76,7 @@ export function reviewColumnClass(key: ReviewColumnKey) {
 }
 
 export const REVIEW_GRID_CLASS =
-  "grid min-w-max grid-cols-[repeat(8,max-content)] justify-between";
+  "grid min-w-max grid-cols-[repeat(var(--table-columns),max-content)] justify-between";
 
 export const REVIEW_ROW_CLASS = "col-span-full grid grid-cols-subgrid";
 

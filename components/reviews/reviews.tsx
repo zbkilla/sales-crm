@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, type CSSProperties } from "react";
 import Button from "@/components/_ui/button";
 import { ScrollArea } from "@/components/_ui/scroll-area";
 import {
@@ -149,7 +149,11 @@ export default function Reviews() {
 
       <div className="border-border flex min-h-0 flex-1 flex-col border-t">
         <ScrollArea orientation="both" className="min-h-0 flex-1">
-          <Table role="table" className={cn(REVIEW_GRID_CLASS, "w-full")}>
+          <Table
+            role="table"
+            className={cn(REVIEW_GRID_CLASS, "w-full")}
+            style={{ "--table-columns": columns.length } as CSSProperties}
+          >
             <TableHeader role="rowgroup" className="contents">
               <TableRow role="row" className={REVIEW_ROW_CLASS}>
                 {columns.map((column) => (
@@ -199,7 +203,9 @@ export default function Reviews() {
 
         <div className="caption-style border-border bg-background grid shrink-0 grid-cols-2 gap-px border-b p-px sm:grid-cols-4">
           <div className="outline-border flex items-center gap-2 p-3 outline-1">
-            <span className="text-foreground tabular-nums">{visible.length}</span>
+            <span className="text-foreground tabular-nums">
+              {visible.length}
+            </span>
             <span className="text-muted-foreground">Clients in view</span>
           </div>
           {summary.map((item) => (

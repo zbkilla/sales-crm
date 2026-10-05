@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, type CSSProperties } from "react";
 import Avatar from "@/components/_ui/avatar";
 import Button from "@/components/_ui/button";
 import { ScrollArea } from "@/components/_ui/scroll-area";
@@ -56,15 +56,17 @@ const COLUMNS = [
   { key: "request", label: "Request", className: "justify-start" },
   { key: "household", label: "Household", className: "justify-start" },
   { key: "status", label: "Status", className: "justify-start" },
+  { key: "role", label: "Role", className: "justify-start" },
   { key: "step", label: "Current Step", className: "justify-start" },
   { key: "progress", label: "Progress", className: "justify-start" },
   { key: "owner", label: "Owner", className: "justify-start" },
   { key: "due", label: "Due", className: "justify-start" },
+  { key: "sla", label: "SLA Status", className: "justify-start" },
   { key: "amount", label: "Amount", className: "justify-end tabular-nums" },
 ];
 
 const GRID_CLASS =
-  "grid min-w-max grid-cols-[repeat(8,max-content)] justify-between";
+  "grid min-w-max grid-cols-[repeat(var(--table-columns),max-content)] justify-between";
 const ROW_CLASS = "col-span-full grid grid-cols-subgrid";
 const CELL_CLASS = "flex items-center";
 
@@ -113,6 +115,10 @@ export default function ServiceRequests() {
 
   const open = requests.filter(isOpen);
   const pastSla = open.filter((request) => slaStatus(request) === "overdue");
+  const columns =
+    tab === "closed"
+      ? COLUMNS.filter((column) => column.key !== "sla")
+      : COLUMNS;
   const nigoRate = requests.length
     ? Math.round(
         (requests.filter((request) => request.nigoHistory.length > 0).length /
@@ -238,10 +244,14 @@ export default function ServiceRequests() {
 
       <div className="border-border flex min-h-0 flex-1 flex-col border-t">
         <ScrollArea orientation="both" className="min-h-0 flex-1">
-          <Table role="table" className={cn(GRID_CLASS, "w-full")}>
+          <Table
+            role="table"
+            className={cn(GRID_CLASS, "w-full")}
+            style={{ "--table-columns": columns.length } as CSSProperties}
+          >
             <TableHeader role="rowgroup" className="contents">
               <TableRow role="row" className={ROW_CLASS}>
-                {COLUMNS.map((column) => (
+                {columns.map((column) => (
                   <TableHead
                     key={column.key}
                     role="columnheader"
@@ -300,9 +310,15 @@ export default function ServiceRequests() {
                     </TableCell>
                     <TableCell role="cell" className={CELL_CLASS}>
                       {step && isOpen(request) ? (
-                        <span className="flex max-w-[20em] items-center gap-2">
-                          <RoleTag role={step.step.role} />
-                          <span className="truncate">{step.step.name}</span>
+                        <RoleTag role={step.step.role} />
+                      ) : (
+                        <span className="text-subtle">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell role="cell" className={CELL_CLASS}>
+                      {step && isOpen(request) ? (
+                        <span className="max-w-[18em] truncate">
+                          {step.step.name}
                         </span>
                       ) : (
                         <span className="text-subtle">
@@ -332,17 +348,27 @@ export default function ServiceRequests() {
                       </span>
                     </TableCell>
                     <TableCell role="cell" className={CELL_CLASS}>
-                      <span className="flex items-center gap-2">
+                      {tab === "closed" && !request.completedOn ? (
+                        <span className="text-subtle">—</span>
+                      ) : (
                         <span className="tabular-nums">
-                          {tab === "closed"
-                            ? request.completedOn
-                              ? formatDate(request.completedOn)
-                              : "—"
-                            : formatDate(request.dueOn)}
+                          {formatDate(
+                            tab === "closed"
+                              ? (request.completedOn as string)
+                              : request.dueOn,
+                          )}
                         </span>
-                        {sla && <FollowUpTag status={sla} />}
-                      </span>
+                      )}
                     </TableCell>
+                    {tab !== "closed" && (
+                      <TableCell role="cell" className={CELL_CLASS}>
+                        {sla ? (
+                          <FollowUpTag status={sla} />
+                        ) : (
+                          <span className="text-subtle">—</span>
+                        )}
+                      </TableCell>
+                    )}
                     <TableCell
                       role="cell"
                       className={cn(CELL_CLASS, "justify-end tabular-nums")}
