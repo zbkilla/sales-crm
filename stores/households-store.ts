@@ -16,6 +16,12 @@ import {
   type Tier,
   type Touchpoint,
 } from "@/data/households";
+import {
+  NOTES,
+  NOTE_COMMENTS,
+  type Note,
+  type NoteComment,
+} from "@/data/notes";
 import { NOTIFICATIONS } from "@/data/notifications";
 import { TASKS, type Task } from "@/data/tasks";
 import type { NigoReason, ServiceRequest } from "@/data/service-requests";
@@ -148,6 +154,13 @@ type HouseholdsState = {
   assistantDraft: string;
   setAssistantDraft: (draft: string) => void;
   askAssistant: (prompt: string) => void;
+  notes: Note[];
+  noteComments: Record<string, NoteComment[]>;
+  pinnedNoteIds: string[];
+  addNote: (note: Note) => void;
+  deleteNote: (id: string) => void;
+  addNoteComment: (entryId: string, comment: NoteComment) => void;
+  togglePinnedNote: (entryId: string) => void;
   resetDemoData: () => void;
 };
 
@@ -179,6 +192,9 @@ function initialData() {
     tasks: TASKS,
     serviceRequests: buildSeedRequests(),
     upcomingMeetings: UPCOMING_MEETINGS,
+    notes: NOTES,
+    noteComments: NOTE_COMMENTS,
+    pinnedNoteIds: [] as string[],
     unreadNotificationIds: NOTIFICATIONS.filter((item) => item.unread).map(
       (item) => item.id,
     ),
@@ -508,6 +524,30 @@ export const useHouseholdsStore = create<HouseholdsState>()(
       setAssistantDraft: (assistantDraft) => set({ assistantDraft }),
       askAssistant: (prompt) =>
         set({ assistantDraft: prompt, assistantOpen: true }),
+      addNote: (note) => set((state) => ({ notes: [note, ...state.notes] })),
+      deleteNote: (id) =>
+        set((state) => {
+          const noteComments = { ...state.noteComments };
+          delete noteComments[id];
+          return {
+            notes: state.notes.filter((note) => note.id !== id),
+            noteComments,
+            pinnedNoteIds: state.pinnedNoteIds.filter((item) => item !== id),
+          };
+        }),
+      addNoteComment: (entryId, comment) =>
+        set((state) => ({
+          noteComments: {
+            ...state.noteComments,
+            [entryId]: [...(state.noteComments[entryId] ?? []), comment],
+          },
+        })),
+      togglePinnedNote: (entryId) =>
+        set((state) => ({
+          pinnedNoteIds: state.pinnedNoteIds.includes(entryId)
+            ? state.pinnedNoteIds.filter((item) => item !== entryId)
+            : [...state.pinnedNoteIds, entryId],
+        })),
       resetDemoData: () =>
         set({
           ...initialData(),
@@ -520,7 +560,7 @@ export const useHouseholdsStore = create<HouseholdsState>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 2,
+      version: 3,
       migrate: () => initialData(),
       storage: createJSONStorage(() => safeStorage),
       skipHydration: true,
@@ -529,6 +569,9 @@ export const useHouseholdsStore = create<HouseholdsState>()(
         tasks: state.tasks,
         serviceRequests: state.serviceRequests,
         upcomingMeetings: state.upcomingMeetings,
+        notes: state.notes,
+        noteComments: state.noteComments,
+        pinnedNoteIds: state.pinnedNoteIds,
         unreadNotificationIds: state.unreadNotificationIds,
       }),
     },

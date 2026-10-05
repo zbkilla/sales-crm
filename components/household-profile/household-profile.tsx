@@ -18,9 +18,9 @@ import ProfileSection from "./profile-section";
 import BalanceSheetTable from "./balance-sheet-table";
 import AssetComposition from "./asset-composition";
 import DataTable from "./data-table";
-import OpenItemsList from "./open-items-list";
 import GoalsGrid from "./goals-grid";
 import ContactCards from "./contact-cards";
+import NotesPanel from "./notes-panel";
 import {
   MEETING_TONES,
   advisorByName,
@@ -462,12 +462,11 @@ function HouseholdProfileView({ household }: { household: Household }) {
           {tab === "overview" && (
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
               <div className="flex min-w-0 flex-col gap-4">
-                <ProfileSection
-                  title={`Open items · ${items.length}`}
-                  description="Unconfirmed, stale or overdue records to resolve before the next touchpoint."
-                >
-                  <OpenItemsList items={items} />
-                </ProfileSection>
+                <NotesPanel
+                  key={household.id}
+                  household={household}
+                  items={items}
+                />
                 {tracked && (
                   <ProfileSection
                     title="Asset composition"
