@@ -41,7 +41,8 @@ export default function AssistantSheet() {
   const open = useHouseholdsStore((state) => state.assistantOpen);
   const setOpen = useHouseholdsStore((state) => state.setAssistantOpen);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [draft, setDraft] = useState("");
+  const draft = useHouseholdsStore((state) => state.assistantDraft);
+  const setDraft = useHouseholdsStore((state) => state.setAssistantDraft);
   const [pending, setPending] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const endRef = useRef<HTMLDivElement>(null);

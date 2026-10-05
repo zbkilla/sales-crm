@@ -10,6 +10,7 @@ import { useHouseholdsStore } from "@/stores/households-store";
 import MenuIcon from "@/public/assets/images/_common/menu.svg";
 import ActiveDot from "@/public/assets/images/households/header/active-dot.svg";
 import SearchIcon from "@/public/assets/images/_common/search.svg";
+import ChevronIcon from "@/public/assets/images/_common/chevron-down.svg";
 import ChatIcon from "@/public/assets/images/households/sidebar/message-question.svg";
 
 export type PageTab = {
@@ -20,6 +21,8 @@ export type PageTab = {
 
 type PageHeaderProps = {
   title: string;
+  backHref?: string;
+  backLabel?: string;
   tabs: PageTab[];
   activeTab: string;
   onTabChange: (value: string) => void;
@@ -27,6 +30,8 @@ type PageHeaderProps = {
 
 export default function PageHeader({
   title,
+  backHref,
+  backLabel = "Back",
   tabs,
   activeTab,
   onTabChange,
@@ -51,8 +56,20 @@ export default function PageHeader({
           >
             <MenuIcon aria-hidden className="size-3.5" />
           </Button>
-          <h1 className="truncate">{title}</h1>
-          <span className="caption-style bg-muted inline-flex shrink-0 items-center gap-0.5 rounded-full border border-[#363636] py-[3px] pr-[5px] pl-[3px]">
+          {backHref && (
+            <Button
+              variant="ghost"
+              size="sm"
+              href={backHref}
+              aria-label={backLabel}
+              className="text-soft -ml-1.5 shrink-0"
+            >
+              <ChevronIcon aria-hidden className="size-3 rotate-90" />
+              <span className="hidden sm:inline">{backLabel}</span>
+            </Button>
+          )}
+          <h1 className="min-w-0 truncate">{title}</h1>
+          <span className="caption-style bg-muted hidden shrink-0 items-center gap-0.5 rounded-full border border-[#363636] py-[3px] pr-[5px] pl-[3px] sm:inline-flex">
             <ActiveDot aria-hidden className="size-3" />
             Active
           </span>
@@ -93,10 +110,10 @@ export default function PageHeader({
       </div>
 
       <Tabs value={activeTab} onValueChange={onTabChange}>
-        <TabsList className="border-border border-b px-4">
+        <TabsList className="border-border overflow-x-auto border-b px-4 [scrollbar-width:none]">
           {tabs.map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value}>
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5 whitespace-nowrap">
                 {tab.label}
                 {tab.count !== undefined && (
                   <CountBadge>{tab.count}</CountBadge>

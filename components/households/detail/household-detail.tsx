@@ -86,16 +86,28 @@ export default function HouseholdDetail() {
           <SheetDescription className="sr-only">
             Members, portfolio, opportunities, engagement and recent meetings
           </SheetDescription>
-          <SheetClose asChild>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="-mr-1"
-              aria-label="Close details"
-            >
-              <XIcon aria-hidden className="text-foreground size-4" />
-            </Button>
-          </SheetClose>
+          <div className="flex items-center gap-1">
+            {household && (
+              <Button
+                variant="secondary"
+                size="sm"
+                href={`/households/${household.id}`}
+                onClick={closeDetail}
+              >
+                Open full profile
+              </Button>
+            )}
+            <SheetClose asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="-mr-1"
+                aria-label="Close details"
+              >
+                <XIcon aria-hidden className="text-foreground size-4" />
+              </Button>
+            </SheetClose>
+          </div>
         </SheetHeader>
 
         {household && (

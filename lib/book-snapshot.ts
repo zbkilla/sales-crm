@@ -2,6 +2,13 @@ import type { Household } from "@/data/households";
 import type { ScheduledMeeting } from "@/data/meetings";
 import { PROJECT_TYPES, type Project } from "@/data/projects";
 import type { Task } from "@/data/tasks";
+import { ASSET_CATEGORIES } from "@/data/financials";
+import {
+  buildBalanceSheet,
+  hasFinancials,
+  householdFinancials,
+} from "@/lib/balance-sheet";
+import { openItems } from "@/lib/open-items";
 import {
   TODAY,
   ageFrom,
@@ -21,7 +28,78 @@ type BookSource = {
   upcomingMeetings: ScheduledMeeting[];
 };
 
-function householdSnapshot(household: Household) {
+function financialSnapshot(household: Household) {
+  if (!hasFinancials(household.id)) return null;
+  const sheet = buildBalanceSheet(household);
+  const financials = householdFinancials(household.id);
+  return {
+    netWorth: sheet.netWorth.totalValue,
+    totalAssets: sheet.assets.totalAssets.totalValue,
+    totalLiabilities: sheet.liabilities.totalLiabilities.totalValue,
+    assetsByCategory: Object.fromEntries(
+      ASSET_CATEGORIES.map((category) => [
+        category.label,
+        sheet.assets[category.key].reduce(
+          (total, line) => total + line.totalValue,
+          0,
+        ),
+      ]).filter(([, value]) => value !== 0),
+    ),
+    otherAssets: financials.otherAssets.map((asset) => ({
+      name: asset.name,
+      category: asset.category,
+      owner: asset.owner,
+      value: asset.value,
+      valueAsOf: asset.valueAsOf,
+      heldAway: asset.heldAway ?? false,
+    })),
+    liabilities: financials.liabilities.map((liability) => ({
+      name: liability.name,
+      type: liability.type,
+      lender: liability.lender,
+      balance: liability.balance,
+      interestRatePercent: liability.interestRate,
+      rateAssumed: liability.rateAssumed ?? false,
+      monthlyPayment: liability.monthlyPayment,
+    })),
+    outOfEstate: sheet.outOfEstate.map((entity) => ({
+      name: entity.name,
+      type: entity.type,
+      totalValue: entity.totalValue,
+    })),
+    beneficiaries: Object.fromEntries(
+      household.accounts.map((account) => [
+        account.name,
+        financials.accountDetails[account.id]?.beneficiaryPrimary ?? null,
+      ]),
+    ),
+    insurance: financials.insurance.map((policy) => ({
+      type: policy.type,
+      carrier: policy.carrier,
+      insured: policy.insured,
+      coverage: policy.coverageLabel ?? policy.coverage,
+      premium: `${policy.premium} ${policy.premiumFrequency}`,
+      beneficiary: policy.beneficiary ?? null,
+      termEnds: policy.expires ?? null,
+    })),
+    goals: financials.goals.map((goal) => ({
+      name: goal.name,
+      category: goal.category,
+      targetAmount: goal.targetAmount,
+      targetDate: goal.targetDate,
+      fundedPercent: goal.fundedPercent,
+      status: goal.status,
+    })),
+    estateDocuments: financials.estateDocuments,
+    professionalTeam: financials.team,
+  };
+}
+
+function householdSnapshot(
+  household: Household,
+  tasks: Task[],
+  projects: Project[],
+) {
   return {
     id: household.id,
     name: household.name,
@@ -75,6 +153,10 @@ function householdSnapshot(household: Household) {
       targetClose: opportunity.targetClose,
     })),
     weightedPipeline: weightedPipeline(household),
+    financials: financialSnapshot(household),
+    openItems: openItems(household, tasks, projects).map(
+      (item) => `${item.severity}: ${item.title}`,
+    ),
     recentMeetings: household.meetings.map((meeting) => ({
       title: meeting.title,
       type: meeting.type,
@@ -96,7 +178,9 @@ export function buildBookSnapshot({
 
   return {
     today: TODAY,
-    households: households.map(householdSnapshot),
+    households: households.map((household) =>
+      householdSnapshot(household, tasks, projects),
+    ),
     openTasks: tasks
       .filter((task) => task.status === "todo")
       .map((task) => ({

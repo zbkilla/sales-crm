@@ -92,7 +92,7 @@ export default function SidebarContent() {
               label="Households"
               count={households.length}
               href="/"
-              active={pathname === "/"}
+              active={pathname === "/" || pathname.startsWith("/households")}
               onClick={navigate()}
             />
             <SidebarNavItem

@@ -123,6 +123,9 @@ type HouseholdsState = {
   completeMeeting: (id: string) => void;
   assistantOpen: boolean;
   setAssistantOpen: (open: boolean) => void;
+  assistantDraft: string;
+  setAssistantDraft: (draft: string) => void;
+  askAssistant: (prompt: string) => void;
   resetDemoData: () => void;
 };
 
@@ -439,6 +442,10 @@ export const useHouseholdsStore = create<HouseholdsState>()(
         }),
       assistantOpen: false,
       setAssistantOpen: (assistantOpen) => set({ assistantOpen }),
+      assistantDraft: "",
+      setAssistantDraft: (assistantDraft) => set({ assistantDraft }),
+      askAssistant: (prompt) =>
+        set({ assistantDraft: prompt, assistantOpen: true }),
       resetDemoData: () =>
         set({
           ...initialData(),
